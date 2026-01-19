@@ -43,30 +43,27 @@ except ImportError:
 from ferramentas_avancadas import consultar_documentos, salvar_arquivo, ler_arquivo
 
 # ==========================================
-# 🚀 NOVAS FERRAMENTAS (AGORA COM LOCALIZAÇÃO)
+# 🚀 FERRAMENTAS
 # ==========================================
 
 @tool
 def obter_localizacao() -> str:
     """
-    Identifica a localização atual do usuário (Cidade, Região, País) baseada no IP da internet.
-    Use isso se o usuário perguntar 'onde estou' ou pedir informações locais.
+    Identifica a localização atual (Cidade, País) via IP.
     """
     try:
         response = requests.get("https://ipinfo.io/json")
         data = response.json()
-        cidade = data.get("city", "Desconhecida")
-        pais = data.get("country", "Desconhecido")
-        return f"Localização Atual detectada: {cidade}, {pais}"
+        return f"Localização: {data.get('city')}, {data.get('country')}"
     except Exception as e:
-        return f"Não foi possível obter a localização: {str(e)}"
+        return f"Erro localizacao: {str(e)}"
 
 @tool
 def scraper_web(url: str) -> str:
     """
-    Entra em um site e copia o texto principal.
+    Lê o texto de um site.
     Args:
-        url: O endereço do site (http://...).
+        url: O endereço do site.
     """
     try:
         headers = {'User-Agent': 'Mozilla/5.0'}
@@ -81,13 +78,12 @@ def scraper_web(url: str) -> str:
 @tool
 def buscar_na_web(termo: str) -> str:
     """
-    Pesquisa no DuckDuckGo para informações em tempo real.
+    Pesquisa no DuckDuckGo.
     Args:
-        termo: O que você quer pesquisar.
+        termo: O que pesquisar.
     """
     if not BUSCA_DISPONIVEL: return "Erro: Modulo de busca ausente."
     try:
-        # Tenta usar o DDGS diretamente
         results = DDGS().text(termo, max_results=3)
         return str(results) if results else "Nada encontrado."
     except Exception as e:
@@ -96,9 +92,9 @@ def buscar_na_web(termo: str) -> str:
 @tool
 def analisar_dados_csv(caminho_arquivo: str) -> str:
     """
-    Lê um arquivo CSV/Excel e retorna estatísticas.
+    Lê CSV/Excel e retorna estatísticas.
     Args:
-        caminho_arquivo: O caminho do arquivo.
+        caminho_arquivo: Caminho do arquivo.
     """
     try:
         if caminho_arquivo.endswith('.csv'): df = pd.read_csv(caminho_arquivo)
@@ -108,7 +104,7 @@ def analisar_dados_csv(caminho_arquivo: str) -> str:
     except Exception as e: return f"Erro: {str(e)}"
 
 # ==========================================
-# ⚙️ CONFIGURAÇÕES (SIDEBAR)
+# ⚙️ CONFIGURAÇÕES
 # ==========================================
 with st.sidebar:
     st.image("https://cdn-icons-png.flaticon.com/512/2040/2040946.png", width=50)
@@ -117,9 +113,9 @@ with st.sidebar:
     with st.expander("🧠 Configuração do Cérebro", expanded=True):
         opcoes_modelos = {}
         
-        # Google (Gemini 2.5 e Pro)
-        opcoes_modelos["☁️ Gemini 2.5 Flash (Rápido)"] = ("gemini/gemini-2.5-flash", "GEMINI_API_KEY")
-        opcoes_modelos["☁️ Gemini 2.5 Pro (Potente)"] = ("gemini/gemini-2.5-pro", "GEMINI_API_KEY")
+        # Google
+        opcoes_modelos["☁️ Gemini 2.5 Flash"] = ("gemini/gemini-2.5-flash", "GEMINI_API_KEY")
+        opcoes_modelos["☁️ Gemini 2.5 Pro"] = ("gemini/gemini-2.5-pro", "GEMINI_API_KEY")
         
         # Groq
         opcoes_modelos["🚀 Groq Llama 3.3"] = ("groq/llama-3.3-70b-versatile", "GROQ_API_KEY")
@@ -136,10 +132,9 @@ with st.sidebar:
 
         criatividade = st.slider("Criatividade", 0.0, 1.0, 0.2, 0.1)
 
-    with st.expander("🧰 Status das Ferramentas", expanded=False):
-        st.caption("✅ Localização (IP)")
-        st.caption("✅ Busca Web")
-        st.caption("✅ Leitura de Docs")
+    with st.expander("🧰 Ferramentas Ativas", expanded=False):
+        st.caption("✅ Geolocalização")
+        st.caption("✅ Web Scraping")
         st.caption("✅ Análise de Dados")
 
     if st.button("🗑️ Nova Conversa", type="primary"):
@@ -154,7 +149,7 @@ for msg in st.session_state["messages"]:
     with st.chat_message(msg["role"]):
         st.markdown(msg["content"])
 
-if prompt := st.chat_input("Ex: Onde eu estou? Qual o preço da madeira hoje?"):
+if prompt := st.chat_input("Digite sua solicitação..."):
     st.session_state["messages"].append({"role": "user", "content": prompt})
     with st.chat_message("user"):
         st.markdown(prompt)
@@ -172,17 +167,17 @@ if prompt := st.chat_input("Ex: Onde eu estou? Qual o preço da madeira hoje?"):
                 max_tokens=4000, temperature=criatividade
             )
 
-            # LISTA DE FERRAMENTAS COM LOCALIZAÇÃO
             tools_list = [consultar_documentos, salvar_arquivo, ler_arquivo, analisar_dados_csv, scraper_web, obter_localizacao]
             if BUSCA_DISPONIVEL: tools_list.append(buscar_na_web)
 
+            # --- CORREÇÃO AQUI ---
+            # Removemos 'plt' da lista abaixo
             agent = CodeAgent(
                 tools=tools_list, model=modelo, add_base_tools=True,
-                additional_authorized_imports=['datetime', 'numpy', 'pandas', 'matplotlib', 'plt', 'requests', 'bs4', 'json', 'os']
+                additional_authorized_imports=['datetime', 'numpy', 'pandas', 'matplotlib', 'requests', 'bs4', 'json', 'os']
             )
 
-            # INSTRUÇÃO PARA USAR A LOCALIZAÇÃO SE NECESSÁRIO
-            prompt_contexto = f"USUÁRIO: {prompt}\n\nNota: Se o usuário perguntar sobre localização ou 'aqui', use a ferramenta 'obter_localizacao'."
+            prompt_contexto = f"USUÁRIO: {prompt}\n\nNota: Se perguntarem sobre localização, use 'obter_localizacao'."
             
             response = agent.run(prompt_contexto)
             

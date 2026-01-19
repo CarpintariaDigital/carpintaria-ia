@@ -13,3 +13,7 @@ groq
 google-generativeai
 pandas
 numpy
+beautifulsoup4
+requests
+matplotlib
+openpyxl

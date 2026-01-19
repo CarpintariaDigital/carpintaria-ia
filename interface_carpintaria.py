@@ -1,103 +1,171 @@
 import streamlit as st
 import os
+import pandas as pd
+import matplotlib.pyplot as plt
+import requests
+from bs4 import BeautifulSoup
 from smolagents import CodeAgent, LiteLLMModel, tool
 
-# --- 1. CONFIGURAÇÃO DA PÁGINA ---
-st.set_page_config(page_title="Carpintaria Digital Pro", page_icon="🪚", layout="wide")
-st.title("🪚 Carpintaria Digital Pro (Versão Híbrida 2.5)")
+# --- 1. CONFIGURAÇÃO VISUAL PROFISSIONAL ---
+st.set_page_config(
+    page_title="Carpintaria OS", 
+    page_icon="🛠️", 
+    layout="wide",
+    initial_sidebar_state="expanded"
+)
 
-# --- IMPORTAÇÃO SEGURA DO OLLAMA (OFFLINE) ---
+# Estilo CSS para deixar mais 'Enterprise'
+st.markdown("""
+<style>
+    .stChatInput {border-radius: 20px;}
+    .block-container {padding-top: 2rem;}
+    h1 {color: #2e4053;}
+</style>
+""", unsafe_allow_html=True)
+
+st.title("🛠️ Carpintaria OS: Enterprise AI")
+st.markdown("---")
+
+# --- VERIFICAÇÕES DE SISTEMA ---
 try:
     import ollama
-    # Testa conexão rápida
     ollama.list()
     OLLAMA_AVAILABLE = True
-except Exception:
+except:
     OLLAMA_AVAILABLE = False
 
-# --- IMPORTAÇÃO SEGURA DA BUSCA (ONLINE) ---
 try:
     from duckduckgo_search import DDGS
     BUSCA_DISPONIVEL = True
 except ImportError:
     BUSCA_DISPONIVEL = False
 
+# --- IMPORTAÇÃO DE FERRAMENTAS EXISTENTES ---
 from ferramentas_avancadas import consultar_documentos, salvar_arquivo, ler_arquivo
 
-# --- FERRAMENTA DE BUSCA CORRIGIDA (Com documentação estrita) ---
+# ==========================================
+# 🚀 NOVAS FERRAMENTAS (ADAPTADAS DO SEU PEDIDO)
+# ==========================================
+
+@tool
+def scraper_web(url: str) -> str:
+    """
+    Entra em um site e copia o texto principal. Ótimo para ler notícias ou documentação técnica.
+    
+    Args:
+        url: O endereço do site (começando com http:// ou https://).
+    """
+    try:
+        headers = {'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'}
+        response = requests.get(url, headers=headers, timeout=10)
+        soup = BeautifulSoup(response.content, 'html.parser')
+        
+        # Remove scripts e estilos para limpar o texto
+        for script in soup(["script", "style"]):
+            script.extract()
+            
+        texto = soup.get_text()
+        # Limpa espaços em branco excessivos
+        lines = (line.strip() for line in texto.splitlines())
+        chunks = (phrase.strip() for line in lines for phrase in line.split("  "))
+        texto_limpo = '\n'.join(chunk for chunk in chunks if chunk)
+        
+        return texto_limpo[:4000] + "..." # Limita para não estourar a memória
+    except Exception as e:
+        return f"Erro ao acessar o site: {str(e)}"
+
 @tool
 def buscar_na_web(termo: str) -> str:
     """
-    Pesquisa na internet (DuckDuckGo) para encontrar informações em tempo real.
-    Use esta ferramenta quando precisar de preços atuais, cotação do dólar ou notícias.
-
+    Pesquisa no DuckDuckGo para informações em tempo real (Preços, Notícias).
     Args:
-        termo: O texto da pesquisa ou pergunta a ser buscada no DuckDuckGo.
+        termo: O que você quer pesquisar.
     """
-    if not BUSCA_DISPONIVEL:
-        return "Erro: Biblioteca de busca não instalada no sistema."
-    
+    if not BUSCA_DISPONIVEL: return "Erro: Modulo de busca ausente."
     try:
-        # Tenta conectar. Se estiver sem net, vai cair no except
         results = DDGS().text(termo, max_results=3)
-        if not results:
-            return "Nenhum resultado encontrado."
-        
-        resposta = f"Resultados para '{termo}':\n"
-        for i, r in enumerate(results):
-            resposta += f"{i+1}. {r['title']}: {r['body']} (Link: {r['href']})\n"
-        return resposta
+        return str(results) if results else "Nada encontrado."
     except Exception as e:
-        # Retorna erro amigável em vez de quebrar o app
-        return f"⚠️ Falha na busca (Possível falta de internet): {str(e)}"
+        return f"Erro na busca: {str(e)}"
 
-# --- 2. BARRA LATERAL (MENU) ---
-with st.sidebar:
-    st.header("🧠 Cérebro da IA")
+@tool
+def analisar_dados_csv(caminho_arquivo: str) -> str:
+    """
+    Lê um arquivo CSV, Excel ou JSON e retorna estatísticas básicas (média, contagem, colunas).
     
-    opcoes_modelos = {}
+    Args:
+        caminho_arquivo: O caminho do arquivo (ex: 'vendas.csv').
+    """
+    try:
+        if caminho_arquivo.endswith('.csv'):
+            df = pd.read_csv(caminho_arquivo)
+        elif caminho_arquivo.endswith('.xlsx'):
+            df = pd.read_excel(caminho_arquivo)
+        else:
+            return "Formato não suportado. Use CSV ou Excel."
+            
+        resumo = df.describe().to_string()
+        info_colunas = str(df.columns.tolist())
+        return f"Colunas: {info_colunas}\n\nEstatísticas:\n{resumo}"
+    except Exception as e:
+        return f"Erro ao analisar dados: {str(e)}"
 
-    # --- GOOGLE GEMINI (Nomes Novos) ---
-    st.caption("☁️ Google (Requer Internet)")
-    opcoes_modelos["Google: Gemini 2.5 Flash (Novo!)"] = ("gemini/gemini-2.5-flash", "GEMINI_API_KEY")
-    opcoes_modelos["Google: Gemini 2.5 Pro (Potente)"] = ("gemini/gemini-2.5-pro", "GEMINI_API_KEY")
-    opcoes_modelos["Google: Gemini 2.0 Flash Lite"] = ("gemini/gemini-2.0-flash-lite", "GEMINI_API_KEY")
+# Nota: O CodeAgent JÁ sabe criar gráficos com matplotlib nativamente,
+# não precisamos criar uma ferramenta específica para isso, basta pedir no chat!
 
-    # --- GROQ ---
-    st.caption("☁️ Groq (Grátis)")
-    opcoes_modelos["Groq: Llama 3.3 (Versátil)"] = ("groq/llama-3.3-70b-versatile", "GROQ_API_KEY")
+# ==========================================
+# ⚙️ CONFIGURAÇÕES (SIDEBAR PROFISSIONAL)
+# ==========================================
+with st.sidebar:
+    st.image("https://cdn-icons-png.flaticon.com/512/2040/2040946.png", width=50)
+    st.markdown("### Painel de Controle")
+    
+    # MENU EXPANSÍVEL (Cleaner UI)
+    with st.expander("🧠 Configuração do Cérebro", expanded=True):
+        
+        # 1. ESCOLHA DO MODELO
+        opcoes_modelos = {}
+        
+        # Google
+        opcoes_modelos["☁️ Gemini 2.5 Flash (Rápido)"] = ("gemini/gemini-2.5-flash", "GEMINI_API_KEY")
+        opcoes_modelos["☁️ Gemini 2.5 Pro (Potente)"] = ("gemini/gemini-2.5-pro", "GEMINI_API_KEY")
+        
+        # Groq
+        opcoes_modelos["🚀 Groq Llama 3.3"] = ("groq/llama-3.3-70b-versatile", "GROQ_API_KEY")
+        
+        # OpenRouter
+        opcoes_modelos["🌐 OpenRouter (DeepSeek)"] = ("openrouter/deepseek/deepseek-r1:free", "OPENROUTER_API_KEY")
 
-    # --- OPENROUTER ---
-    st.caption("☁️ OpenRouter")
-    opcoes_modelos["OpenRouter: DeepSeek R1 (Free)"] = ("openrouter/deepseek/deepseek-r1:free", "OPENROUTER_API_KEY")
-    opcoes_modelos["OpenRouter: Mistral 7B (Free)"] = ("openrouter/mistralai/mistral-7b-instruct:free", "OPENROUTER_API_KEY")
+        # Local
+        if OLLAMA_AVAILABLE:
+            opcoes_modelos["🏠 Local: Qwen 2.5"] = ("ollama/qwen2.5-coder:3b", None)
+            opcoes_modelos["🏠 Local: Llama 3.2"] = ("ollama/llama3.2:latest", None)
 
-    st.divider()
+        nome_escolhido = st.selectbox("Modelo Ativo:", list(opcoes_modelos.keys()))
+        model_id, api_env_var = opcoes_modelos[nome_escolhido]
 
-    # --- LOCAL (OLLAMA) ---
-    if OLLAMA_AVAILABLE:
-        st.success("🟢 Modo Local (Offline) Ativo")
-        # Adiciona modelos locais no topo da lista
-        opcoes_locais = {
-            "🏠 Local: Qwen 2.5 Coder": ("ollama/qwen2.5-coder:3b", None),
-            "🏠 Local: Llama 3.2": ("ollama/llama3.2:latest", None),
-        }
-        # Junta os dicionários (Locais primeiro)
-        opcoes_modelos = {**opcoes_locais, **opcoes_modelos}
-    else:
-        st.error("🔴 Modo Local Indisponível (Rode 'ollama serve')")
+        # 2. TEMPERATURA (CRIATIVIDADE)
+        criatividade = st.slider(
+            "Nível de Criatividade (Temperatura)", 
+            min_value=0.0, 
+            max_value=1.0, 
+            value=0.2, 
+            step=0.1,
+            help="0.0 = Preciso e Robótico | 1.0 = Criativo e Imprevisível"
+        )
 
-    # Seleção
-    nome_escolhido = st.selectbox("Escolha o Cérebro:", list(opcoes_modelos.keys()))
-    model_id, api_env_var = opcoes_modelos[nome_escolhido]
+    # MENU DE FERRAMENTAS
+    with st.expander("🧰 Ferramentas Habilitadas", expanded=False):
+        st.checkbox("Acesso à Internet (Busca + Scraping)", value=True, disabled=True)
+        st.checkbox("Sistema de Arquivos (Ler/Escrever)", value=True, disabled=True)
+        st.checkbox("Análise de Dados (Pandas/CSV)", value=True, disabled=True)
+        st.checkbox("Leitura de Documentos (RAG)", value=True, disabled=True)
 
-    modo_agente = st.toggle("🕵️ Agente (Docs + Web)", value=True)
-
-    if st.button("🗑️ Limpar Conversa"):
+    if st.button("🗑️ Nova Conversa", type="primary"):
         st.session_state["messages"] = []
         st.rerun()
 
-# --- 3. LÓGICA DO CHAT ---
+# --- CHAT LOGIC ---
 if "messages" not in st.session_state:
     st.session_state["messages"] = []
 
@@ -105,72 +173,63 @@ for msg in st.session_state["messages"]:
     with st.chat_message(msg["role"]):
         st.markdown(msg["content"])
 
-if prompt := st.chat_input("Pergunte algo..."):
+if prompt := st.chat_input("Ex: Pesquise o preço do MDF ou analise o arquivo vendas.csv..."):
     st.session_state["messages"].append({"role": "user", "content": prompt})
     with st.chat_message("user"):
         st.markdown(prompt)
 
     with st.chat_message("assistant"):
-        message_placeholder = st.empty()
-        status = st.status(f"⚙️ Processando com {nome_escolhido}...", expanded=True)
+        placeholder = st.empty()
+        status_container = st.status("🧠 Pensando...", expanded=False)
 
         try:
-            # 1. Configura Chave API (Só se não for Local)
-            api_key = None
-            if api_env_var: 
-                api_key = os.environ.get(api_env_var)
-                if not api_key:
-                    status.update(label="❌ Sem Chave", state="error")
-                    st.error(f"Falta a chave {api_env_var}!")
-                    st.stop()
-            
-            # 2. Configura URL Local (Só se for Ollama)
+            # Configuração de Chaves
+            api_key = os.environ.get(api_env_var) if api_env_var else None
             base_url = "http://localhost:11434" if "ollama" in model_id else None
-            
-            modelo_agente = LiteLLMModel(
+
+            # MODELO COM TEMPERATURA AJUSTÁVEL
+            modelo = LiteLLMModel(
                 model_id=model_id,
-                api_key=api_key, 
+                api_key=api_key,
                 api_base=base_url,
-                max_tokens=4000
+                max_tokens=4000,
+                temperature=criatividade # <--- AQUI ENTRA A SUA CONFIGURAÇÃO
             )
 
-            if modo_agente:
-                minhas_ferramentas = [consultar_documentos, salvar_arquivo, ler_arquivo]
-                
-                # Só usa a busca se a biblioteca existir
-                if BUSCA_DISPONIVEL:
-                    minhas_ferramentas.append(buscar_na_web)
+            # LISTA DE FERRAMENTAS COMPLETAS
+            tools_list = [
+                consultar_documentos, 
+                salvar_arquivo, 
+                ler_arquivo, 
+                analisar_dados_csv, # Nova Ferramenta Analista
+                scraper_web         # Nova Ferramenta Scraper
+            ]
+            
+            if BUSCA_DISPONIVEL:
+                tools_list.append(buscar_na_web)
 
-                agent = CodeAgent(
-                    tools=minhas_ferramentas, 
-                    model=modelo_agente, 
-                    add_base_tools=True,
-                    additional_authorized_imports=['datetime', 'numpy', 'pandas', 'os', 'json', 'duckduckgo_search']
-                )
-                
-                # INSTRUÇÕES BLINDADAS
-                aviso_offline = ""
-                if "Local" in nome_escolhido:
-                    aviso_offline = "VOCÊ ESTÁ EM MODO LOCAL. Se a ferramenta 'buscar_na_web' falhar, ignore e responda com seu conhecimento interno."
+            # AGENTE
+            agent = CodeAgent(
+                tools=tools_list,
+                model=modelo,
+                add_base_tools=True,
+                # Autoriza bibliotecas de análise e gráficos
+                additional_authorized_imports=[
+                    'datetime', 'numpy', 'pandas', 'matplotlib', 'plt', 
+                    'requests', 'bs4', 'json', 'os'
+                ]
+            )
 
-                prompt_sistema = f"""
-                SOLICITAÇÃO: {prompt}
-                DIRETRIZES:
-                1. Priorize 'consultar_documentos' para perguntas da empresa.
-                2. Use 'buscar_na_web' para dados externos.
-                {aviso_offline}
-                3. Responda sempre em Português.
-                """
-                
-                resposta_final = agent.run(prompt_sistema)
-            else:
-                agent = CodeAgent(tools=[], model=modelo_agente, add_base_tools=False)
-                resposta_final = agent.run(prompt)
+            response = agent.run(f"USUÁRIO: {prompt}\n(Responda em Português)")
+            
+            status_container.update(label="✅ Concluído", state="complete")
+            placeholder.markdown(response)
+            st.session_state["messages"].append({"role": "assistant", "content": response})
 
-            status.update(label="✅ Pronto!", state="complete", expanded=False)
-            message_placeholder.markdown(resposta_final)
-            st.session_state["messages"].append({"role": "assistant", "content": resposta_final})
+            # Se a IA gerou gráfico, ele salva como arquivo. Vamos tentar mostrar.
+            if os.path.exists("chart.png"): # Exemplo se ela salvar chart.png
+                 st.image("chart.png")
 
         except Exception as e:
-            status.update(label="❌ Erro", state="error")
-            st.error(f"Erro técnico: {str(e)}")
+            status_container.update(label="❌ Erro", state="error")
+            st.error(f"Erro no processamento: {e}")

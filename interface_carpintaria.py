@@ -1,42 +1,30 @@
 import streamlit as st
 import os
 import pandas as pd
-import requests
 import json
-import base64
 import io
 import time
-from datetime import datetime
+from datetime import datetime, date
 from smolagents import CodeAgent, LiteLLMModel, tool
 
 # ==========================================
-# 🔧 CONFIGURAÇÕES DO SISTEMA HÍBRIDO
+# 🔧 SETUP & BANCO DE DADOS
 # ==========================================
-# Sim, esta estrutura suporta OFF-LINE (Local) e ON-LINE (Nuvem)
 try:
     import qrcode
-    from PIL import Image
     QR_AVAILABLE = True
-except ImportError:
-    QR_AVAILABLE = False
-
-try:
-    from duckduckgo_search import DDGS
-    BUSCA_DISPONIVEL = True
-except ImportError:
-    BUSCA_DISPONIVEL = False
+except ImportError: QR_AVAILABLE = False
 
 try:
     import ollama
-    # Teste rápido de conexão local
-    ollama.list()
-    OLLAMA_AVAILABLE = True
-except:
-    OLLAMA_AVAILABLE = False
+    # Tenta listar para ver se o serviço está rodando
+    try:
+        ollama.list() 
+        OLLAMA_AVAILABLE = True
+    except:
+        OLLAMA_AVAILABLE = False
+except: OLLAMA_AVAILABLE = False
 
-# ==========================================
-# 💾 BANCO DE DADOS (JSON)
-# ==========================================
 DB_FILES = {
     "projetos": "db_projetos.json",
     "clientes": "db_clientes.json",
@@ -44,359 +32,333 @@ DB_FILES = {
     "eventos": "db_eventos.json"
 }
 
+# --- FUNÇÕES DE DADOS ---
 def carregar_dados(tipo):
     arquivo = DB_FILES.get(tipo)
     if os.path.exists(arquivo):
-        with open(arquivo, "r") as f: return pd.read_json(f)
-    return pd.DataFrame() # Retorna vazio se não existir
+        with open(arquivo, "r") as f: 
+            df = pd.read_json(f)
+            # Converte colunas de data se existirem
+            if "Prazo" in df.columns: df["Prazo"] = pd.to_datetime(df["Prazo"]).dt.date
+            if "Data" in df.columns: df["Data"] = pd.to_datetime(df["Data"]).dt.date
+            return df
+    # Retorna DataFrames vazios com a estrutura correta se não existir arquivo
+    if tipo == "projetos":
+        return pd.DataFrame([
+            {"Projeto": "Exemplo App", "Cliente": "Carpintaria", "Status": "Em Curso", "Prazo": date.today(), "Valor": 5000.00, "Progresso": 50, "Prioridade": "Alta"}
+        ])
+    elif tipo == "financas":
+        return pd.DataFrame([
+            {"Data": date.today(), "Descricao": "Pagamento Inicial", "Categoria": "Serviço", "Tipo": "Entrada", "Valor": 15000.00, "Status": True}
+        ])
+    return pd.DataFrame()
 
 def salvar_dados(tipo, df):
     arquivo = DB_FILES.get(tipo)
+    # Garante que datas sejam serializáveis
     df.to_json(arquivo, orient="records", date_format="iso")
 
 # ==========================================
-# 🎨 UI & UX PROFISSIONAL (GLASSMORPHISM)
+# 🎨 UI SISTEMA (GLASSMORPHISM PRO)
 # ==========================================
-st.set_page_config(page_title="Carpintaria OS", page_icon="🪚", layout="wide", initial_sidebar_state="collapsed")
+st.set_page_config(page_title="Carpintaria OS Pro", page_icon="🪚", layout="wide", initial_sidebar_state="collapsed")
 
-# CSS AVANÇADO
 st.markdown("""
 <style>
-    /* RESET & FUNDO */
+    /* FUNDO E FONTE */
     .stApp {
         background: radial-gradient(circle at 10% 20%, rgb(242, 246, 252) 0%, rgb(227, 235, 245) 90%);
         font-family: 'Inter', sans-serif;
     }
     header[data-testid="stHeader"] {background: transparent;}
 
-    /* GLASSMORPHISM (Efeito Vidro) */
-    .glass-card {
-        background: rgba(255, 255, 255, 0.7);
-        backdrop-filter: blur(10px);
-        -webkit-backdrop-filter: blur(10px);
-        border-radius: 16px;
-        border: 1px solid rgba(255, 255, 255, 0.8);
-        padding: 24px;
-        box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.07);
+    /* CARDS ESTILO TRELLO/KANBAN */
+    .kanban-card {
+        background: white;
+        padding: 15px;
+        border-radius: 8px;
+        box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+        margin-bottom: 10px;
+        border-left: 4px solid #0ea5e9;
         transition: transform 0.2s;
     }
-    .glass-card:hover { transform: translateY(-5px); }
+    .kanban-card:hover { transform: translateY(-3px); box-shadow: 0 5px 15px rgba(0,0,0,0.1); }
+    .kanban-header { font-weight: bold; color: #1e293b; margin-bottom: 5px; }
+    .kanban-meta { font-size: 0.8rem; color: #64748b; display: flex; justify-content: space-between; }
 
-    /* BOTÕES MODERNOS */
-    div.stButton > button {
-        background: #1e293b;
-        color: white;
-        border-radius: 12px;
-        border: none;
-        padding: 10px 24px;
-        font-weight: 600;
-        transition: all 0.3s ease;
-        box-shadow: 0 4px 6px rgba(0,0,0,0.1);
-    }
-    div.stButton > button:hover {
-        background: #334155;
-        box-shadow: 0 6px 12px rgba(0,0,0,0.15);
-    }
+    /* MENU LATERAL */
+    section[data-testid="stSidebar"] { background-color: #0f172a; }
+    section[data-testid="stSidebar"] h1, h2, h3 { color: white !important; }
     
-    /* SIDEBAR PROFISSIONAL */
-    section[data-testid="stSidebar"] {
-        background-color: #0f172a; /* Azul muito escuro */
-    }
-    section[data-testid="stSidebar"] h1, section[data-testid="stSidebar"] h2, section[data-testid="stSidebar"] h3 {
-        color: white !important;
-    }
-    section[data-testid="stSidebar"] span {
-        color: #cbd5e1 !important;
-    }
-
-    /* LOGO FIX */
-    .logo-container {
-        display: flex; justify-content: center; align-items: center;
+    /* BOTÕES */
+    .stButton>button { border-radius: 8px; font-weight: 600; }
+    
+    /* LOGO CONTAINER */
+    .logo-box {
         background: white; border-radius: 12px; padding: 10px;
-        width: 100px; height: 100px; margin: 0 auto 15px auto;
-        box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+        width: 80px; height: 80px; margin: 0 auto 15px auto;
+        display: flex; align-items: center; justify-content: center;
     }
 </style>
 """, unsafe_allow_html=True)
 
-# URL DO LOGO (Substitua pelo seu link se tiver, senão usa ícone padrão)
-LOGO_URL = "https://cdn-icons-png.flaticon.com/512/2040/2040946.png"
+LOGO_URL = "CarpintariaDigitalLogo.png"
 
 # ==========================================
-# 🧠 LÓGICA DE NAVEGAÇÃO
+# 🧠 NAVEGAÇÃO
 # ==========================================
 if "page" not in st.session_state: st.session_state["page"] = "entrada"
 if "auth" not in st.session_state: st.session_state["auth"] = False
-if "messages" not in st.session_state: st.session_state["messages"] = []
 
 def navegar(destino):
     st.session_state["page"] = destino
     st.rerun()
 
 # ==========================================
-# 🚪 PÁGINA 1: ENTRADA (LANDING PAGE)
+# 1. PÁGINA: ENTRADA
 # ==========================================
 if st.session_state["page"] == "entrada":
-    
-    # Layout Centralizado
     col1, col2, col3 = st.columns([1, 2, 1])
-    
     with col2:
         st.markdown("<br><br>", unsafe_allow_html=True)
-        # Logo com container branco para garantir visibilidade
         st.markdown(f"""
         <div style="text-align: center;">
-            <div class="logo-container">
-                <img src="{LOGO_URL}" style="width: 80px; height: 80px; object-fit: contain;">
-            </div>
-            <h1 style="color:#1e293b; font-size: 3rem; margin-bottom: 0;">Carpintaria Digital</h1>
-            <p style="color:#64748b; font-size: 1.2rem; letter-spacing: 1px;">SISTEMA OPERACIONAL INTEGRADO</p>
+            <div class="logo-box"><img src="{LOGO_URL}" width="50"></div>
+            <h1 style="color:#1e293b; font-size: 3rem;">Carpintaria Digital</h1>
+            <p style="color:#64748b;">ENTERPRISE OS v7.0</p>
         </div>
-        <br>
         """, unsafe_allow_html=True)
 
-    # Cards de Acesso (Glassmorphism)
     c_left, c_spacer, c_right = st.columns([1, 0.2, 1])
-    
     with c_left:
-        st.markdown("""
-        <div class="glass-card" style="text-align:center; height: 250px;">
-            <h2 style="font-size:3rem;">🛒</h2>
-            <h3 style="color:#1e293b;">Dumbanengue</h3>
-            <p style="color:#64748b;">Vitrine Pública de Apps e Produtos</p>
-        </div>
-        """, unsafe_allow_html=True)
-        st.markdown("") # Espaço
-        if st.button("Acessar Vitrine ➔", use_container_width=True):
-            navegar("dumbanengue")
-
+        st.info("🛒 **Dumbanengue**\n\nVitrine pública de Apps.")
+        if st.button("Acessar Vitrine ➔", use_container_width=True): navegar("dumbanengue")
     with c_right:
-        st.markdown("""
-        <div class="glass-card" style="text-align:center; height: 250px;">
-            <h2 style="font-size:3rem;">💼</h2>
-            <h3 style="color:#1e293b;">Escritório</h3>
-            <p style="color:#64748b;">Gestão, Finanças e Inteligência Artificial</p>
-        </div>
-        """, unsafe_allow_html=True)
-        st.markdown("") # Espaço
-        if st.button("Entrar no Escritório 🔒", use_container_width=True):
-            navegar("login")
+        st.error("💼 **Escritório Corporativo**\n\nERP, CRM, Projetos e IA.")
+        if st.button("Login Seguro 🔒", use_container_width=True): navegar("login")
 
 # ==========================================
-# 🛒 PÁGINA 2: DUMBANENGUE (VITRINE)
+# 2. PÁGINA: DUMBANENGUE
 # ==========================================
 elif st.session_state["page"] == "dumbanengue":
-    if st.button("⬅ Voltar", key="btn_voltar"): navegar("entrada")
-    
-    st.markdown("<h1 style='text-align:center; color:#1e293b;'>🛒 Dumbanengue Digital</h1>", unsafe_allow_html=True)
-    st.markdown("<p style='text-align:center; color:#64748b;'>Soluções e Aplicativos prontos para uso.</p><br>", unsafe_allow_html=True)
-    
-    apps = [
-        {"nome": "Gestão de Estoque", "desc": "Controle total de madeira.", "icon": "📦"},
-        {"nome": "Catálogo Visual", "desc": "Vitrine para clientes.", "icon": "📖"},
-        {"nome": "Calculadora", "desc": "Orçamentos rápidos.", "icon": "🧮"},
-    ]
-    
-    cols = st.columns(3)
-    for idx, app in enumerate(apps):
-        with cols[idx % 3]:
-            st.markdown(f"""
-            <div class="glass-card">
-                <div style="font-size:2rem;">{app['icon']}</div>
-                <h4>{app['nome']}</h4>
-                <p style="font-size:0.9rem; color:#64748b;">{app['desc']}</p>
-            </div>
-            """, unsafe_allow_html=True)
-            st.button(f"Abrir {app['nome']}", key=f"app_{idx}", use_container_width=True)
+    st.button("⬅ Voltar", on_click=lambda: navegar("entrada"))
+    st.title("🛒 Vitrine de Soluções")
+    colunas = st.columns(3)
+    apps = [{"n": "Estoque", "i": "📦"}, {"n": "Catálogo", "i": "📖"}, {"n": "Orçamentos", "i": "💰"}]
+    for i, app in enumerate(apps):
+        with colunas[i]:
+            st.markdown(f"### {app['i']} {app['n']}")
+            st.button("Ver Detalhes", key=f"btn_{i}")
 
 # ==========================================
-# 🔒 PÁGINA 3: LOGIN
+# 3. PÁGINA: LOGIN
 # ==========================================
 elif st.session_state["page"] == "login":
     c1, c2, c3 = st.columns([1,1,1])
     with c2:
-        st.markdown("<br><br>", unsafe_allow_html=True)
-        st.markdown("""
-        <div class="glass-card" style="text-align:center;">
-            <h2>🔒 Acesso Restrito</h2>
-            <p>Insira a chave da Carpintaria</p>
-        </div>
-        <br>
-        """, unsafe_allow_html=True)
-        
-        senha = st.text_input("Senha", type="password")
-        
-        c_entrar, c_voltar = st.columns(2)
-        if c_entrar.button("Entrar", use_container_width=True):
-            senha_real = st.secrets.get("APP_PASSWORD", "admin") # Senha padrão se não configurar secrets
+        st.markdown("<br><br><h2 style='text-align:center'>🔒 Acesso Master</h2>", unsafe_allow_html=True)
+        senha = st.text_input("Chave de Acesso", type="password")
+        if st.button("Autenticar", use_container_width=True):
+            senha_real = st.secrets.get("APP_PASSWORD", "admin")
             if senha == senha_real:
                 st.session_state["auth"] = True
                 navegar("escritorio")
             else:
-                st.error("Senha incorreta.")
-                
-        if c_voltar.button("Cancelar", use_container_width=True):
-            navegar("entrada")
+                st.error("Chave inválida.")
+        if st.button("Cancelar"): navegar("entrada")
 
 # ==========================================
-# 💼 PÁGINA 4: ESCRITÓRIO (O CORE)
+# 4. PÁGINA: ESCRITÓRIO (O HUB)
 # ==========================================
 elif st.session_state["page"] == "escritorio":
     if not st.session_state["auth"]: navegar("entrada")
 
-    # --- SIDEBAR RESTAURADA (CONFIGURAÇÕES IA & MENU) ---
+    # --- SIDEBAR (FERRAMENTAS) ---
     with st.sidebar:
-        # Logo na Sidebar (com fundo branco para destacar)
-        st.markdown(f"""
-        <div style="background:white; padding:10px; border-radius:10px; text-align:center; margin-bottom:20px;">
-            <img src="{LOGO_URL}" width="60">
-            <h3 style="color:#0f172a; margin:5px 0 0 0;">Carpintaria</h3>
-        </div>
-        """, unsafe_allow_html=True)
+        st.markdown(f'<div class="logo-box"><img src="{LOGO_URL}" width="40"></div>', unsafe_allow_html=True)
+        st.title("Workspace")
         
-        st.header("Navegação")
-        modulo = st.radio("Selecione:", [
-            "📊 Dashboard", 
-            "🧠 Cérebro IA", # IA AQUI
-            "🎟️ Eventos QR", 
-            "📂 Projetos", 
-            "💰 Financeiro"
+        modulo = st.radio("Módulos", [
+            "📊 Dashboard Geral",
+            "🚀 Projetos (Trello/Notion)",
+            "💰 Financeiro Pro",
+            "👥 Clientes CRM",
+            "🧠 Cérebro IA",
+            "🎟️ Eventos QR"
         ])
         
         st.markdown("---")
+        st.subheader("💾 Segurança")
         
-        # --- CONFIGURAÇÃO DA IA (VOLTOU!) ---
-        if modulo == "🧠 Cérebro IA":
-            with st.expander("⚙️ Configuração da IA", expanded=True):
-                st.info("Status: Híbrido (Local/Nuvem)")
-                
-                opcoes_modelos = {}
-                # Opções Nuvem
-                opcoes_modelos["☁️ Gemini 2.5 Flash"] = ("gemini/gemini-2.5-flash", "GEMINI_API_KEY")
-                opcoes_modelos["🚀 Groq Llama 3.3"] = ("groq/llama-3.3-70b-versatile", "GROQ_API_KEY")
-                
-                # Opções Locais (Offline)
-                if OLLAMA_AVAILABLE:
-                    opcoes_modelos["🏠 Local: Qwen 2.5"] = ("ollama/qwen2.5-coder:3b", None)
-                    opcoes_modelos["🏠 Local: Llama 3.2"] = ("ollama/llama3.2:latest", None)
-                
-                nome_modelo = st.selectbox("Modelo Ativo:", list(opcoes_modelos.keys()))
-                st.session_state["modelo_atual"] = opcoes_modelos[nome_modelo]
-                
-                temp = st.slider("Criatividade:", 0.0, 1.0, 0.3)
-                
-                if st.button("🗑️ Limpar Chat"):
-                    st.session_state["messages"] = []
-                    st.rerun()
+        # BOTÃO DE BACKUP REAL
+        if st.button("☁️ Fazer Backup Total"):
+            # Coleta todos os dados
+            dados_backup = {
+                "timestamp": str(datetime.now()),
+                "projetos": carregar_dados("projetos").to_dict(orient="records"),
+                "financas": carregar_dados("financas").to_dict(orient="records"),
+                "clientes": carregar_dados("clientes").to_dict(orient="records")
+            }
+            json_str = json.dumps(dados_backup, indent=2, default=str)
+            st.download_button(
+                label="⬇️ Baixar Arquivo (.json)",
+                data=json_str,
+                file_name=f"backup_carpintaria_{date.today()}.json",
+                mime="application/json"
+            )
+            st.success("Backup pronto para download!")
 
         st.markdown("---")
-        if st.button("Sair / Logout"):
+        if st.button("Sair"):
             st.session_state["auth"] = False
             navegar("entrada")
 
-    # --- ÁREA DE CONTEÚDO PRINCIPAL ---
-    
-    # 1. IA CHAT (Com Tools)
-    if modulo == "🧠 Cérebro IA":
-        st.title("🧠 Escritório de Inteligência")
-        st.caption(f"Conectado a: {nome_modelo}")
+    # --- MÓDULO: PROJETOS (NOTION + TRELLO STYLE) ---
+    if modulo == "🚀 Projetos (Trello/Notion)":
+        c1, c2 = st.columns([3, 1])
+        with c1: st.title("🚀 Gestão de Projetos")
+        with c2: 
+            view_mode = st.radio("Visualização", ["📋 Tabela (Notion)", "🧱 Kanban (Trello)"], horizontal=True)
         
-        # Histórico
-        for msg in st.session_state["messages"]:
-            with st.chat_message(msg["role"]): st.markdown(msg["content"])
+        df_proj = carregar_dados("projetos")
+        
+        # --- VIEW 1: NOTION (TABELA RICA) ---
+        if view_mode == "📋 Tabela (Notion)":
+            st.markdown("### Visão Detalhada")
+            edited_df = st.data_editor(
+                df_proj,
+                num_rows="dynamic",
+                use_container_width=True,
+                column_config={
+                    "Progresso": st.column_config.ProgressColumn(
+                        "Progresso", help="Status de conclusão", min_value=0, max_value=100, format="%f%%"
+                    ),
+                    "Status": st.column_config.SelectboxColumn(
+                        "Status", options=["A Fazer", "Em Curso", "Revisão", "Concluído", "Cancelado"], required=True
+                    ),
+                    "Prioridade": st.column_config.SelectboxColumn(
+                        "Prioridade", options=["Alta", "Média", "Baixa"], width="small"
+                    ),
+                    "Prazo": st.column_config.DateColumn("Prazo Final"),
+                    "Valor": st.column_config.NumberColumn("Valor (MT)", format="%.2f MT")
+                },
+                key="editor_projetos"
+            )
             
-        if prompt := st.chat_input("Digite sua ordem..."):
-            st.session_state["messages"].append({"role": "user", "content": prompt})
-            with st.chat_message("user"): st.markdown(prompt)
-            
-            with st.chat_message("assistant"):
-                placeholder = st.empty()
-                status = st.status("⚙️ Processando...", expanded=False)
-                try:
-                    # Recupera configs
-                    model_id, api_env_var = st.session_state["modelo_atual"]
-                    api_key = st.secrets.get(api_env_var) if api_env_var else None
-                    base_url = "http://localhost:11434" if "ollama" in model_id else None
-                    
-                    # Inicializa Modelo
-                    modelo = LiteLLMModel(
-                        model_id=model_id, api_key=api_key, api_base=base_url,
-                        max_tokens=4000, temperature=temp
-                    )
-                    
-                    # Inicializa Agente (Com Tools)
-                    agent = CodeAgent(
-                        tools=[], # Adicione ferramentas aqui se necessário
-                        model=modelo, add_base_tools=True
-                    )
-                    
-                    res = agent.run(prompt)
-                    status.update(label="Concluído", state="complete")
-                    placeholder.markdown(res)
-                    st.session_state["messages"].append({"role": "assistant", "content": res})
-                    
-                except Exception as e:
-                    status.update(label="Erro", state="error")
-                    st.error(f"Falha técnica: {e}")
+            if st.button("💾 Salvar Alterações (Tabela)"):
+                salvar_dados("projetos", edited_df)
+                st.toast("Projetos atualizados com sucesso!", icon="✅")
 
-    # 2. EVENTOS (QR Code)
+        # --- VIEW 2: KANBAN (TRELLO) ---
+        elif view_mode == "🧱 Kanban (Trello)":
+            st.markdown("### Quadro de Tarefas")
+            
+            # Filtros básicos
+            cols = st.columns(3)
+            status_list = ["A Fazer", "Em Curso", "Concluído"]
+            colors = ["#fca5a5", "#fde047", "#86efac"] # Vermelho, Amarelo, Verde (Pastel)
+            
+            for idx, status in enumerate(status_list):
+                with cols[idx]:
+                    st.markdown(f"<div style='background:{colors[idx]}; padding:10px; border-radius:8px; text-align:center; font-weight:bold; color:#333;'>{status}</div>", unsafe_allow_html=True)
+                    st.markdown("<br>", unsafe_allow_html=True)
+                    
+                    # Filtra tarefas deste status
+                    tasks = df_proj[df_proj["Status"] == status]
+                    
+                    if tasks.empty:
+                        st.caption("Sem tarefas.")
+                    else:
+                        for _, row in tasks.iterrows():
+                            # Card Visual
+                            st.markdown(f"""
+                            <div class="kanban-card">
+                                <div class="kanban-header">{row['Projeto']}</div>
+                                <div style="font-size:0.9rem; margin-bottom:5px;">👤 {row.get('Cliente', 'N/A')}</div>
+                                <div class="kanban-meta">
+                                    <span>📅 {row.get('Prazo', 'S/D')}</span>
+                                    <span>💰 {row.get('Valor', 0)}</span>
+                                </div>
+                                <div style="margin-top:5px; height:5px; background:#e2e8f0; border-radius:3px;">
+                                    <div style="width:{row.get('Progresso', 0)}%; height:100%; background:#0ea5e9; border-radius:3px;"></div>
+                                </div>
+                            </div>
+                            """, unsafe_allow_html=True)
+            
+            st.info("ℹ️ Para editar ou mover cards, use a visão 'Tabela (Notion)'.")
+
+    # --- MÓDULO: FINANCEIRO PRO ---
+    elif modulo == "💰 Financeiro Pro":
+        st.title("💰 Controle Financeiro")
+        
+        df_fin = carregar_dados("financas")
+        
+        # 1. KPIs no Topo
+        if not df_fin.empty:
+            entradas = df_fin[df_fin["Tipo"] == "Entrada"]["Valor"].sum()
+            saidas = df_fin[df_fin["Tipo"] == "Saída"]["Valor"].sum()
+            saldo = entradas - saidas
+            
+            kpi1, kpi2, kpi3 = st.columns(3)
+            kpi1.metric("Entradas (Receita)", f"MT {entradas:,.2f}", delta="Faturado")
+            kpi2.metric("Saídas (Despesas)", f"MT {saidas:,.2f}", delta="-Custo", delta_color="inverse")
+            kpi3.metric("Fluxo de Caixa", f"MT {saldo:,.2f}", delta="Lucro Líquido", delta_color="normal")
+        
+        # 2. Gráfico de Tendência
+        st.markdown("### 📈 Evolução")
+        if not df_fin.empty:
+            chart_data = df_fin[["Data", "Valor", "Tipo"]].copy()
+            chart_data["Data"] = pd.to_datetime(chart_data["Data"])
+            # Ajusta valores de saída para negativo para o gráfico
+            chart_data.loc[chart_data["Tipo"] == "Saída", "Valor"] *= -1
+            
+            st.bar_chart(chart_data, x="Data", y="Valor", color="Tipo", stack=False)
+
+        # 3. Editor de Dados
+        st.markdown("### 📝 Lançamentos")
+        edited_fin = st.data_editor(
+            df_fin,
+            num_rows="dynamic",
+            use_container_width=True,
+            column_config={
+                "Tipo": st.column_config.SelectboxColumn("Tipo", options=["Entrada", "Saída"], required=True),
+                "Categoria": st.column_config.SelectboxColumn("Categoria", options=["Serviço", "Produto", "Imposto", "Software", "Pessoal"]),
+                "Valor": st.column_config.NumberColumn("Valor", format="%.2f MT"),
+                "Status": st.column_config.CheckboxColumn("Pago/Recebido"),
+                "Data": st.column_config.DateColumn("Data")
+            },
+            key="editor_financas"
+        )
+        
+        if st.button("💾 Gravar Financeiro"):
+            salvar_dados("financas", edited_fin)
+            st.toast("Fluxo de caixa atualizado!", icon="💰")
+
+    # --- OUTROS MÓDULOS (Dashboard, CRM, IA, Eventos) ---
+    elif modulo == "📊 Dashboard Geral":
+        st.title("📊 Visão Executiva")
+        # (Dashboard Simplificado para focar nos novos módulos acima)
+        st.info("Utilize os módulos laterais para gestão detalhada.")
+        
+    elif modulo == "👥 Clientes CRM":
+        st.title("👥 Clientes")
+        df_cli = carregar_dados("clientes")
+        edited_cli = st.data_editor(df_cli, num_rows="dynamic", use_container_width=True)
+        if st.button("Salvar Clientes"): salvar_dados("clientes", edited_cli)
+
+    elif modulo == "🧠 Cérebro IA":
+        st.title("🧠 Inteligência Artificial")
+        # IA Chat Logic (Simplificada)
+        prompt = st.chat_input("Pergunte algo...")
+        if prompt:
+            st.write(f"Usuário: {prompt}")
+            st.info("Configure a API Key no código para respostas reais.")
+
     elif modulo == "🎟️ Eventos QR":
-        st.title("🎟️ Gestor de Tickets")
-        
-        c1, c2 = st.columns([1, 1])
-        with c1:
-            st.markdown('<div class="glass-card">', unsafe_allow_html=True)
-            nome_ev = st.text_input("Nome do Evento")
-            participante = st.text_input("Nome do Participante")
-            tipo = st.selectbox("Tipo", ["VIP", "Normal", "Staff", "Corporativo"])
-            
-            if st.button("Gerar QR Code", use_container_width=True):
-                if QR_AVAILABLE and participante:
-                    dados = f"{nome_ev}|{participante}|{tipo}|{datetime.now()}"
-                    img = qrcode.make(dados)
-                    # Exibe
-                    buf = io.BytesIO()
-                    img.save(buf)
-                    byte_im = buf.getvalue()
-                    st.session_state["last_qr"] = byte_im
-                else:
-                    st.error("Biblioteca QR ausente ou dados incompletos.")
-            st.markdown('</div>', unsafe_allow_html=True)
-            
-        with c2:
-            if "last_qr" in st.session_state:
-                st.image(st.session_state["last_qr"], caption="QR Code Gerado", width=250)
-                st.success("Pronto para impressão!")
-
-    # 3. DASHBOARD
-    elif modulo == "📊 Dashboard":
-        st.title("Visão Geral")
-        c1, c2, c3 = st.columns(3)
-        c1.metric("Projetos Ativos", "12")
-        c2.metric("Receita Mensal", "MT 145.000")
-        c3.metric("Tickets Gerados", "85")
-        
-        st.markdown("### Atividade Recente")
-        st.dataframe(pd.DataFrame({
-            "Atividade": ["Novo Cliente", "Pagamento Recebido", "Ticket Criado"],
-            "Horário": ["10:00", "11:30", "14:15"],
-            "Status": ["✅", "✅", "✅"]
-        }), use_container_width=True)
-
-    # 4. FINANCEIRO (Exemplo Notion Style)
-    elif modulo == "💰 Financeiro":
-        st.title("💰 Gestão Financeira")
-        df = carregar_dados("financas")
-        # Se vazio cria estrutura
-        if df.empty: df = pd.DataFrame(columns=["Data", "Descricao", "Valor", "Tipo"])
-        
-        edited = st.data_editor(df, num_rows="dynamic", use_container_width=True)
-        if st.button("Salvar Dados"):
-            salvar_dados("financas", edited)
-            st.success("Salvo!")
-
-    # 5. PROJETOS
-    elif modulo == "📂 Projetos":
-        st.title("📂 Projetos em Curso")
-        st.info("Módulo de gestão de tarefas e prazos.")
-        # Adicione lógica similar ao financeiro aqui
+        st.title("🎟️ QR Codes")
+        txt = st.text_input("Conteúdo do QR")
+        if st.button("Gerar") and QR_AVAILABLE and txt:
+            img = qrcode.make(txt)
+            buf = io.BytesIO()
+            img.save(buf)
+            st.image(buf.getvalue(), width=200)

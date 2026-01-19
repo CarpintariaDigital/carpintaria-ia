@@ -1,8 +1,16 @@
 import streamlit as st
-import ollama
+import os
 from smolagents import CodeAgent, LiteLLMModel
 
-# --- IMPORTS DOS NOSSOS MÓDULOS NOVOS ---
+# --- BLOCO DE IMPORTAÇÃO SEGURA (Correção para o erro da Nuvem) ---
+try:
+    import ollama
+    OLLAMA_AVAILABLE = True
+except ImportError:
+    OLLAMA_AVAILABLE = False
+    # Se estiver na nuvem (Streamlit Cloud), o Ollama não carrega, e tudo bem!
+
+# --- IMPORTS DOS NOSSOS MÓDULOS ---
 from config_carpintaria import CerebroHibrido
 from ferramentas_avancadas import consultar_documentos, salvar_arquivo, ler_arquivo
 
@@ -23,9 +31,9 @@ with st.sidebar:
     else:
         st.warning(f"Sinal: {cerebro.modo}")
 
-    st.subheader("🧠 Modelo Base (Local)")
+    st.subheader("🧠 Modelo Base")
     modelo_local = st.selectbox(
-        "Preferência Offline:", 
+        "Preferência (Se local):", 
         ["qwen2.5-coder:3b", "llama3.2:latest", "phi3.5:latest"]
     )
     
@@ -54,10 +62,10 @@ if prompt := st.chat_input("Qual a tarefa de hoje?"):
 
     with st.chat_message("assistant"):
         message_placeholder = st.empty()
-        
+
         # Define qual configuração usar (Nuvem ou Local automaticamente)
         config_llm = cerebro.obter_config_modelo(modelo_local)
-        
+
         # --- MODO AGENTE (COM FERRAMENTAS E ACESSO AO DISCO) ---
         if modo_agente:
             status = st.status(f"🕵️ Agente processando com {config_llm['model_id']}...", expanded=True)
@@ -71,7 +79,7 @@ if prompt := st.chat_input("Qual a tarefa de hoje?"):
                     temperature=0.2
                 )
 
-                # Inicializa Agente com NOVAS FERRAMENTAS
+                # Inicializa Agente com FERRAMENTAS
                 agent = CodeAgent(
                     tools=[consultar_documentos, salvar_arquivo, ler_arquivo], 
                     model=modelo_agente, 
@@ -82,7 +90,7 @@ if prompt := st.chat_input("Qual a tarefa de hoje?"):
                 # Prompt Reforçado para usar ferramentas
                 prompt_sistema = f"""
                 SOLICITAÇÃO: {prompt}
-                
+
                 DIRETRIZES:
                 1. Se precisar de informação da empresa, USE 'consultar_documentos'.
                 2. Se precisar criar código, NÃO apenas mostre na tela. USE 'salvar_arquivo' para criar o arquivo real.
@@ -90,7 +98,7 @@ if prompt := st.chat_input("Qual a tarefa de hoje?"):
                 """
 
                 resposta_final = agent.run(prompt_sistema)
-
+                
                 status.update(label="✅ Tarefa Concluída!", state="complete", expanded=False)
                 message_placeholder.markdown(resposta_final)
                 st.session_state["messages"].append({"role": "assistant", "content": resposta_final})
@@ -98,16 +106,20 @@ if prompt := st.chat_input("Qual a tarefa de hoje?"):
             except Exception as e:
                 status.update(label="❌ Erro", state="error")
                 st.error(f"Erro no Agente: {e}")
-                # Fallback: Se o agente falhar (ex: erro de internet na nuvem), tenta local
-                st.warning("Tentando fallback para chat simples local...")
 
         # --- MODO CHAT SIMPLES (FALLBACK OU CONVERSA RÁPIDA) ---
         else:
-            full_response = ""
-            # No modo simples, forçamos o local Ollama para ser rápido
-            for chunk in ollama.chat(model=modelo_local, messages=st.session_state["messages"], stream=True):
-                if 'message' in chunk and 'content' in chunk['message']:
-                    full_response += chunk['message']['content']
-                    message_placeholder.markdown(full_response + "▌")
-            message_placeholder.markdown(full_response)
-            st.session_state["messages"].append({"role": "assistant", "content": full_response})
+            # Verifica se o Ollama está disponível antes de tentar usar
+            if OLLAMA_AVAILABLE:
+                full_response = ""
+                for chunk in ollama.chat(model=modelo_local, messages=st.session_state["messages"], stream=True):
+                    if 'message' in chunk and 'content' in chunk['message']:
+                        full_response += chunk['message']['content']
+                        message_placeholder.markdown(full_response + "▌")
+                message_placeholder.markdown(full_response)
+                st.session_state["messages"].append({"role": "assistant", "content": full_response})
+            else:
+                # Se estiver na nuvem e tentar usar o modo simples (Ollama)
+                msg_erro = "⚠️ O modo Chat Simples usa o Ollama (Local), que não está disponível na Nuvem. Por favor, ative o **Modo Agente** para usar Groq/Gemini."
+                message_placeholder.warning(msg_erro)
+                st.session_state["messages"].append({"role": "assistant", "content": msg_erro})

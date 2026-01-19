@@ -7,114 +7,120 @@ import base64
 from bs4 import BeautifulSoup
 from smolagents import CodeAgent, LiteLLMModel, tool
 
-# --- CONFIGURAÇÃO INICIAL ---
+# ==========================================
+# 📱 CONFIGURAÇÃO DOS SEUS APPS (VITRINE)
+# ==========================================
+# EDITE AQUI: Adicione os links das PWAs que você criou para os clientes
+MEUS_APPS = [
+    {
+        "nome": "Gestão de Estoque",
+        "icone": "📦",
+        "desc": "Controle de entrada e saída de madeira e insumos.",
+        "link": "https://exemplo-estoque.streamlit.app" 
+    },
+    {
+        "nome": "Catálogo Digital",
+        "icone": "📖",
+        "desc": "Vitrine de produtos para clientes finais visualizarem.",
+        "link": "https://exemplo-catalogo.streamlit.app"
+    },
+    {
+        "nome": "Calculadora de Orçamento",
+        "icone": "💰",
+        "desc": "Ferramenta rápida para orçar móveis planejados.",
+        "link": "https://www.google.com" # Exemplo
+    },
+    {
+        "nome": "Agenda de Montagens",
+        "icone": "📅",
+        "desc": "Calendário de entregas e equipe externa.",
+        "link": "#"
+    }
+]
+
+# --- 1. CONFIGURAÇÃO VISUAL & PWA ---
 st.set_page_config(
-    page_title="Carpintaria Digital", 
-    page_icon="🪚", 
+    page_title="Carpintaria Digital",
+    page_icon="🪚",
     layout="wide",
-    initial_sidebar_state="collapsed"
+    initial_sidebar_state="expanded"
 )
 
-# --- 🔒 SISTEMA DE SEGURANÇA (LOGIN) ---
+# CSS CUSTOMIZADO (Design System)
+st.markdown("""
+<style>
+    /* Esconde cabeçalho padrão */
+    header[data-testid="stHeader"] {background-color: transparent;}
+    .stApp {background-color: #f4f6f9;}
+    
+    /* MENU LATERAL ESCURO */
+    section[data-testid="stSidebar"] {
+        background-color: #1e293b;
+        color: white;
+    }
+    
+    /* Caixa do Logo */
+    .logo-box {
+        background-color: #0f172a;
+        padding: 20px;
+        border-radius: 15px;
+        text-align: center;
+        margin-bottom: 20px;
+        border: 1px solid #334155;
+    }
+    
+    /* Textos do menu */
+    section[data-testid="stSidebar"] p, section[data-testid="stSidebar"] span {
+        color: #e2e8f0 !important;
+    }
+    
+    /* Estilo dos Cartões do Dumbanengue */
+    div[data-testid="stContainer"] {
+        background-color: white;
+        border-radius: 10px;
+        padding: 10px;
+    }
+</style>
+""", unsafe_allow_html=True)
+
+# --- 2. SISTEMA DE LOGIN ---
 def verificar_acesso():
-    """Bloqueia o app até a senha correta ser inserida."""
-    if "APP_PASSWORD" not in st.secrets:
-        return True # Se não tiver senha configurada, libera.
-
-    if "senha_correta" not in st.session_state:
-        st.session_state["senha_correta"] = False
-
+    if "APP_PASSWORD" not in st.secrets: return True
+    if "senha_correta" not in st.session_state: st.session_state["senha_correta"] = False
+    
     if not st.session_state["senha_correta"]:
-        st.markdown("## 🔒 Acesso Restrito - Carpintaria Digital")
-        senha = st.text_input("Digite a senha de acesso:", type="password")
-        if st.button("Entrar"):
-            if senha == st.secrets["APP_PASSWORD"]:
-                st.session_state["senha_correta"] = True
-                st.rerun()
-            else:
-                st.error("Senha incorreta.")
+        st.markdown("<h1 style='text-align: center;'>🔐 Acesso Restrito</h1>", unsafe_allow_html=True)
+        col1, col2, col3 = st.columns([1,2,1])
+        with col2:
+            senha = st.text_input("Senha da Carpintaria:", type="password")
+            if st.button("Destrancar Porta"):
+                if senha == st.secrets["APP_PASSWORD"]:
+                    st.session_state["senha_correta"] = True
+                    st.rerun()
+                else:
+                    st.error("Chave incorreta.")
         return False
     return True
 
-if not verificar_acesso():
-    st.stop()
+if not verificar_acesso(): st.stop()
 
-# --- URL DO LOGOTIPO ---
-LOGO_URL = "Carpintaria Digital Logo.png" 
-
-# --- CONFIGURAÇÃO PWA (Visual de App) ---
-def configurar_pwa():
-    manifest = {
-        "name": "Carpintaria Digital",
-        "short_name": "Carpintaria",
-        "description": "OS para Carpintaria.",
-        "start_url": "/",
-        "display": "standalone",
-        "background_color": "#2c3e50",
-        "theme_color": "#2c3e50",
-        "icons": [
-            {"src": LOGO_URL, "sizes": "192x192", "type": "image/png"},
-            {"src": LOGO_URL, "sizes": "512x512", "type": "image/png"}
-        ]
-    }
-    
-    manifest_json = json.dumps(manifest)
-    b64_manifest = base64.b64encode(manifest_json.encode()).decode()
-    href_manifest = f'data:application/manifest+json;base64,{b64_manifest}'
-
-    st.markdown(f"""
-    <link rel="manifest" href="{href_manifest}" />
-    <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <style>
-        #MainMenu {{visibility: hidden;}}
-        footer {{visibility: hidden;}}
-        header {{visibility: hidden;}}
-        .stApp {{ background-color: #f8f9fa; }}
-        .stChatInput textarea {{ border-radius: 20px; }}
-        /* Ajuste para o logo ficar bonito */
-        .logo-img {{ border-radius: 10px; margin-bottom: 10px; }}
-    </style>
-    """, unsafe_allow_html=True)
-
-configurar_pwa()
-
-# --- CABEÇALHO (Usando HTML para evitar erro de servidor) ---
-col1, col2 = st.columns([1, 6])
-with col1:
-    # AQUI ESTAVA O ERRO: Trocamos st.image por HTML direto
-    st.markdown(f'<img src="{LOGO_URL}" width="80" class="logo-img">', unsafe_allow_html=True)
-with col2:
-    st.title("Carpintaria Digital")
-
-# --- VERIFICAÇÕES DE SISTEMA ---
+# --- 3. FERRAMENTAS DA IA ---
 try:
     from duckduckgo_search import DDGS
     BUSCA_DISPONIVEL = True
-except ImportError:
-    BUSCA_DISPONIVEL = False
+except ImportError: BUSCA_DISPONIVEL = False
 
 try:
     import ollama
-    ollama.list() 
+    ollama.list()
     OLLAMA_AVAILABLE = True
-except:
-    OLLAMA_AVAILABLE = False
+except: OLLAMA_AVAILABLE = False
 
 from ferramentas_avancadas import consultar_documentos, salvar_arquivo, ler_arquivo
 
-# ==========================================
-# 🚀 FERRAMENTAS
-# ==========================================
-
 @tool
 def scraper_web(url: str) -> str:
-    """
-    Lê o conteúdo de texto de um site.
-    
-    Args:
-        url: O endereço URL do site para ler.
-    """
+    """Lê o conteúdo de texto de um site."""
     try:
         headers = {'User-Agent': 'Mozilla/5.0'}
         response = requests.get(url, headers=headers, timeout=10)
@@ -125,13 +131,8 @@ def scraper_web(url: str) -> str:
 
 @tool
 def buscar_na_web(termo: str) -> str:
-    """
-    Pesquisa no DuckDuckGo (internet).
-    
-    Args:
-        termo: O texto a ser pesquisado.
-    """
-    if not BUSCA_DISPONIVEL: return "Erro: Biblioteca de busca ausente."
+    """Pesquisa no DuckDuckGo."""
+    if not BUSCA_DISPONIVEL: return "Erro: Busca indisponível."
     try:
         results = DDGS().text(termo, max_results=3)
         return str(results) if results else "Nada encontrado."
@@ -139,94 +140,149 @@ def buscar_na_web(termo: str) -> str:
 
 @tool
 def analisar_dados_csv(caminho_arquivo: str) -> str:
-    """
-    Lê CSV/Excel e retorna estatísticas.
-    
-    Args:
-        caminho_arquivo: O caminho para o arquivo.
-    """
+    """Lê CSV/Excel e retorna estatísticas."""
     try:
         if caminho_arquivo.endswith('.csv'): df = pd.read_csv(caminho_arquivo)
         elif caminho_arquivo.endswith('.xlsx'): df = pd.read_excel(caminho_arquivo)
         else: return "Formato inválido."
-        return f"Colunas: {list(df.columns)}\nStats:\n{df.describe().to_string()}"
+        return f"Stats:\n{df.describe().to_string()}"
     except Exception as e: return f"Erro: {str(e)}"
 
 # ==========================================
-# ⚙️ SIDEBAR
+# 🧭 NAVEGAÇÃO E SIDEBAR
 # ==========================================
 with st.sidebar:
-    # Logo na sidebar via HTML também
-    st.markdown(f'<img src="{LOGO_URL}" width="50" style="margin-bottom:15px">', unsafe_allow_html=True)
-    st.markdown("### Configurações")
+    # LOGO
+    st.markdown(f"""
+    <div class="logo-box">
+        <img src="https://cdn-icons-png.flaticon.com/512/2040/2040946.png" width="80">
+        <h3 style="color:white; margin:0; padding-top:10px;">Carpintaria OS</h3>
+    </div>
+    """, unsafe_allow_html=True)
+
+    # MENU
+    menu_selecionado = st.radio(
+        "Navegação:",
+        ["🚪 Entrada", "💼 Escritório (IA)", "🛒 Dumbanengue (Apps)"],
+        index=0 
+    )
     
-    local_usuario = st.text_input("📍 Localização", value="Maputo, Moçambique")
+    st.markdown("---")
     
-    with st.expander("🧠 Cérebro", expanded=False):
+    # CONFIGURAÇÕES IA
+    with st.expander("⚙️ Cérebro & Ajustes", expanded=False):
+        local_usuario = st.text_input("📍 Localização", value="Maputo, Moçambique")
+        
         opcoes_modelos = {}
         opcoes_modelos["☁️ Gemini 2.5 Flash"] = ("gemini/gemini-2.5-flash", "GEMINI_API_KEY")
         opcoes_modelos["☁️ Gemini 2.5 Pro"] = ("gemini/gemini-2.5-pro", "GEMINI_API_KEY")
         opcoes_modelos["🚀 Groq Llama 3.3"] = ("groq/llama-3.3-70b-versatile", "GROQ_API_KEY")
-        opcoes_modelos["🌐 OpenRouter"] = ("openrouter/deepseek/deepseek-r1:free", "OPENROUTER_API_KEY")
-
+        
         if OLLAMA_AVAILABLE:
             opcoes_modelos["🏠 Local: Qwen 2.5"] = ("ollama/qwen2.5-coder:3b", None)
 
-        nome_escolhido = st.selectbox("Modelo:", list(opcoes_modelos.keys()))
+        nome_escolhido = st.selectbox("Modelo IA:", list(opcoes_modelos.keys()))
         model_id, api_env_var = opcoes_modelos[nome_escolhido]
-        criatividade = st.slider("Criatividade", 0.0, 1.0, 0.2, 0.1)
+        criatividade = st.slider("Criatividade", 0.0, 1.0, 0.2)
 
-    if st.button("🗑️ Limpar Chat"):
-        st.session_state["messages"] = []
-        st.rerun()
+# ==========================================
+# 🏠 PÁGINA 1: ENTRADA
+# ==========================================
+if menu_selecionado == "🚪 Entrada":
+    st.title("Bem-vindo à Carpintaria Digital")
+    st.markdown("### Painel de Controle")
+    
+    col1, col2, col3 = st.columns(3)
+    with col1:
+        st.info(f"📱 **Apps no Dumbanengue**\n\n{len(MEUS_APPS)} Aplicativos Disponíveis")
+    with col2:
+        st.success("🧠 **Status da IA**\n\nOperacional e Pronta.")
+    with col3:
+        st.warning(f"📍 **Base**\n\n{local_usuario}")
 
-# --- CHAT ---
-if "messages" not in st.session_state:
-    st.session_state["messages"] = []
+    st.markdown("---")
+    st.markdown("#### Acesso Rápido")
+    st.caption("Use o menu lateral para acessar o Chat Inteligente ou a Vitrine de Apps.")
 
-for msg in st.session_state["messages"]:
-    with st.chat_message(msg["role"]):
-        st.markdown(msg["content"])
+# ==========================================
+# 💼 PÁGINA 2: ESCRITÓRIO (IA)
+# ==========================================
+elif menu_selecionado == "💼 Escritório (IA)":
+    st.title("💼 Escritório Central")
+    st.caption("Agente Especialista para suporte técnico e estratégico.")
 
-if prompt := st.chat_input("Como posso ajudar?"):
-    st.session_state["messages"].append({"role": "user", "content": prompt})
-    with st.chat_message("user"):
-        st.markdown(prompt)
+    if "messages" not in st.session_state: st.session_state["messages"] = []
 
-    with st.chat_message("assistant"):
-        placeholder = st.empty()
-        status = st.status("⚙️", expanded=False)
+    for msg in st.session_state["messages"]:
+        with st.chat_message(msg["role"]):
+            st.markdown(msg["content"])
 
-        try:
-            api_key = os.environ.get(api_env_var) if api_env_var else None
-            if api_env_var and not api_key and api_env_var in st.secrets:
-                api_key = st.secrets[api_env_var]
+    if prompt := st.chat_input("Digite sua solicitação..."):
+        st.session_state["messages"].append({"role": "user", "content": prompt})
+        with st.chat_message("user"):
+            st.markdown(prompt)
 
-            base_url = "http://localhost:11434" if "ollama" in model_id else None
+        with st.chat_message("assistant"):
+            placeholder = st.empty()
+            status = st.status("🧠 Processando...", expanded=False)
 
-            modelo = LiteLLMModel(
-                model_id=model_id, api_key=api_key, api_base=base_url,
-                max_tokens=4000, temperature=criatividade
-            )
+            try:
+                api_key = os.environ.get(api_env_var) if api_env_var else None
+                if api_env_var and not api_key and api_env_var in st.secrets:
+                    api_key = st.secrets[api_env_var]
 
-            tools_list = [consultar_documentos, salvar_arquivo, ler_arquivo, analisar_dados_csv, scraper_web]
-            if BUSCA_DISPONIVEL: tools_list.append(buscar_na_web)
+                base_url = "http://localhost:11434" if "ollama" in model_id else None
 
-            agent = CodeAgent(
-                tools=tools_list, model=modelo, add_base_tools=True,
-                additional_authorized_imports=['datetime', 'numpy', 'pandas', 'requests', 'bs4', 'json', 'os']
-            )
+                modelo = LiteLLMModel(
+                    model_id=model_id, api_key=api_key, api_base=base_url,
+                    max_tokens=4000, temperature=criatividade
+                )
 
-            prompt_contexto = f"Local: {local_usuario}\nPergunta: {prompt}\nInstrução: Seja útil e direto."
-            
-            response = agent.run(prompt_contexto)
-            
-            status.update(label="✓", state="complete")
-            placeholder.markdown(response)
-            st.session_state["messages"].append({"role": "assistant", "content": response})
-            
-            if os.path.exists("chart.png"): st.image("chart.png")
+                tools_list = [consultar_documentos, salvar_arquivo, ler_arquivo, analisar_dados_csv, scraper_web]
+                if BUSCA_DISPONIVEL: tools_list.append(buscar_na_web)
 
-        except Exception as e:
-            status.update(label="Erro", state="error")
-            st.error(f"Erro: {e}")
+                agent = CodeAgent(
+                    tools=tools_list, model=modelo, add_base_tools=True,
+                    additional_authorized_imports=['datetime', 'numpy', 'pandas', 'requests', 'bs4', 'json', 'os']
+                )
+
+                prompt_contexto = f"Contexto: Usuário em {local_usuario}. Responda como expert."
+                response = agent.run(f"{prompt_contexto}\n\n{prompt}")
+                
+                status.update(label="✓", state="complete")
+                placeholder.markdown(response)
+                st.session_state["messages"].append({"role": "assistant", "content": response})
+                
+                if os.path.exists("chart.png"): st.image("chart.png")
+
+            except Exception as e:
+                status.update(label="Erro", state="error")
+                st.error(f"Ocorreu um erro: {e}")
+
+# ==========================================
+# 🛒 PÁGINA 3: DUMBANENGUE (VITRINE DE APPS)
+# ==========================================
+elif menu_selecionado == "🛒 Dumbanengue (Apps)":
+    st.title("🛒 Dumbanengue Digital")
+    st.markdown("### Vitrine de Aplicativos & Ferramentas")
+    st.markdown("Acesso direto às soluções da Carpintaria Digital.")
+    st.markdown("---")
+    
+    # LÓGICA DO GRID (Calcula quantas colunas e linhas)
+    colunas = st.columns(3) # Grade de 3 colunas
+    
+    for index, app in enumerate(MEUS_APPS):
+        coluna_atual = colunas[index % 3] # Distribui entre as 3 colunas
+        
+        with coluna_atual:
+            # Cria um cartão visual para o app com borda
+            with st.container(border=True):
+                st.markdown(f"## {app['icone']}")
+                st.markdown(f"**{app['nome']}**")
+                st.caption(app['desc'])
+                
+                # Botão que leva para o link
+                st.link_button(f"Abrir {app['nome']} ↗", app['link'], use_container_width=True)
+
+    st.markdown("---")
+    st.info("ℹ️ Para adicionar mais aplicativos, contate o administrador do sistema.")

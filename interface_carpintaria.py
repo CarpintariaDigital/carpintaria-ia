@@ -2,45 +2,54 @@ import streamlit as st
 import os
 from smolagents import CodeAgent, LiteLLMModel
 
-# --- BLOCO DE IMPORTAÇÃO SEGURA (Correção para o erro da Nuvem) ---
+# --- BLOCO DE IMPORTAÇÃO SEGURA ---
 try:
     import ollama
+    # Tenta listar modelos só para ver se o servidor responde
+    ollama.list()
     OLLAMA_AVAILABLE = True
-except ImportError:
+except Exception:
     OLLAMA_AVAILABLE = False
-    # Se estiver na nuvem (Streamlit Cloud), o Ollama não carrega, e tudo bem!
 
 # --- IMPORTS DOS NOSSOS MÓDULOS ---
-from config_carpintaria import CerebroHibrido
 from ferramentas_avancadas import consultar_documentos, salvar_arquivo, ler_arquivo
 
 # --- 1. CONFIGURAÇÃO DA PÁGINA ---
 st.set_page_config(page_title="Carpintaria Digital Pro", page_icon="🪚", layout="wide")
-st.title("🪚 Carpintaria Digital Pro")
-
-# Inicializa o Cérebro
-cerebro = CerebroHibrido()
+st.title("🪚 Carpintaria Digital Pro - Versão Híbrida")
 
 # --- 2. PAINEL DE CONTROLE (SIDEBAR) ---
 with st.sidebar:
-    st.header("⚙️ Painel de Controle")
+    st.header("🧠 Cérebro da IA")
     
-    # Mostra status da conexão
-    if cerebro.tem_internet:
-        st.success(f"Sinal: {cerebro.modo}")
-    else:
-        st.warning(f"Sinal: {cerebro.modo}")
+    # --- MENU DE ESCOLHA DE MODELOS ---
+    # Dicionário que liga o "Nome Bonito" ao "ID Técnico"
+    # A estrutura é: "Nome no Menu": ("provedor/modelo", "nome_da_variavel_api")
+    
+    opcoes_modelos = {
+        "☁️ Nuvem: Llama 3.3 (Groq - Super Rápido)": ("groq/llama-3.3-70b-versatile", "GROQ_API_KEY"),
+        "☁️ Nuvem: Gemini 1.5 Flash (Google - Esperto)": ("gemini/gemini-1.5-flash", "GEMINI_API_KEY"),
+    }
 
-    st.subheader("🧠 Modelo Base")
-    modelo_local = st.selectbox(
-        "Preferência (Se local):", 
-        ["qwen2.5-coder:3b", "llama3.2:latest", "phi3.5:latest"]
-    )
+    # Se o Ollama estiver rodando (Local), adiciona as opções locais
+    if OLLAMA_AVAILABLE:
+        opcoes_modelos["🏠 Local: Qwen 2.5 Coder"] = ("ollama/qwen2.5-coder:3b", None)
+        opcoes_modelos["🏠 Local: Llama 3.2"] = ("ollama/llama3.2:latest", None)
+        opcoes_modelos["🏠 Local: Phi 3.5"] = ("ollama/phi3.5:latest", None)
+        st.success("🟢 Modo Local Ativo (Ollama Detectado)")
+    else:
+        st.info("☁️ Modo Nuvem (Ollama Indisponível)")
+
+    # O Menu Dropdown
+    nome_escolhido = st.selectbox("Escolha o Modelo:", list(opcoes_modelos.keys()))
     
+    # Pega as configurações baseadas na escolha
+    model_id, api_env_var = opcoes_modelos[nome_escolhido]
+
     st.divider()
-    modo_agente = st.toggle("🕵️ Ativar Modo Agente (Full Stack)", value=True)
     
-    st.info("Ferramentas Ativas:\n- 📚 RAG (Documentos)\n- 💾 Salvar Arquivos\n- 📖 Ler Arquivos")
+    modo_agente = st.toggle("🕵️ Ativar Agente (Usa Ferramentas)", value=True)
+    st.caption("Ferramentas: RAG (Docs), Salvar Arquivos, Ler Arquivos")
 
     if st.button("🗑️ Limpar Memória"):
         st.session_state["messages"] = []
@@ -55,71 +64,56 @@ for msg in st.session_state["messages"]:
         st.markdown(msg["content"])
 
 # --- 4. LÓGICA PRINCIPAL ---
-if prompt := st.chat_input("Qual a tarefa de hoje?"):
+if prompt := st.chat_input("Como posso ajudar na carpintaria hoje?"):
     st.session_state["messages"].append({"role": "user", "content": prompt})
     with st.chat_message("user"):
         st.markdown(prompt)
 
     with st.chat_message("assistant"):
         message_placeholder = st.empty()
+        status = st.status(f"⚙️ Processando com {nome_escolhido}...", expanded=True)
 
-        # Define qual configuração usar (Nuvem ou Local automaticamente)
-        config_llm = cerebro.obter_config_modelo(modelo_local)
+        try:
+            # --- PREPARAÇÃO DAS CHAVES API ---
+            api_key = None
+            if api_env_var: # Se for modelo de nuvem
+                api_key = os.environ.get(api_env_var)
+                if not api_key:
+                    status.update(label="❌ Erro de Chave", state="error")
+                    st.error(f"Falta a chave {api_env_var} nos Secrets do Streamlit!")
+                    st.stop()
+            
+            # --- CONFIGURAÇÃO DO MODELO ---
+            modelo_agente = LiteLLMModel(
+                model_id=model_id,
+                api_key=api_key, # Pode ser None se for Ollama, o LiteLLM entende
+                api_base="http://localhost:11434" if "ollama" in model_id else None,
+                max_tokens=4000,
+                temperature=0.2
+            )
 
-        # --- MODO AGENTE (COM FERRAMENTAS E ACESSO AO DISCO) ---
-        if modo_agente:
-            status = st.status(f"🕵️ Agente processando com {config_llm['model_id']}...", expanded=True)
-            try:
-                # Configura o modelo dinamicamente
-                modelo_agente = LiteLLMModel(
-                    model_id=config_llm['model_id'],
-                    api_base=config_llm['api_base'],
-                    api_key=config_llm['api_key'],
-                    max_tokens=4000,
-                    temperature=0.2
-                )
-
-                # Inicializa Agente com FERRAMENTAS
+            # --- MODO AGENTE OU CHAT ---
+            if modo_agente:
                 agent = CodeAgent(
                     tools=[consultar_documentos, salvar_arquivo, ler_arquivo], 
                     model=modelo_agente, 
                     add_base_tools=True,
                     additional_authorized_imports=['datetime', 'numpy', 'pandas', 'os', 'json']
                 )
-
-                # Prompt Reforçado para usar ferramentas
-                prompt_sistema = f"""
-                SOLICITAÇÃO: {prompt}
-
-                DIRETRIZES:
-                1. Se precisar de informação da empresa, USE 'consultar_documentos'.
-                2. Se precisar criar código, NÃO apenas mostre na tela. USE 'salvar_arquivo' para criar o arquivo real.
-                3. Responda sempre em Português.
-                """
-
-                resposta_final = agent.run(prompt_sistema)
                 
-                status.update(label="✅ Tarefa Concluída!", state="complete", expanded=False)
-                message_placeholder.markdown(resposta_final)
-                st.session_state["messages"].append({"role": "assistant", "content": resposta_final})
-
-            except Exception as e:
-                status.update(label="❌ Erro", state="error")
-                st.error(f"Erro no Agente: {e}")
-
-        # --- MODO CHAT SIMPLES (FALLBACK OU CONVERSA RÁPIDA) ---
-        else:
-            # Verifica se o Ollama está disponível antes de tentar usar
-            if OLLAMA_AVAILABLE:
-                full_response = ""
-                for chunk in ollama.chat(model=modelo_local, messages=st.session_state["messages"], stream=True):
-                    if 'message' in chunk and 'content' in chunk['message']:
-                        full_response += chunk['message']['content']
-                        message_placeholder.markdown(full_response + "▌")
-                message_placeholder.markdown(full_response)
-                st.session_state["messages"].append({"role": "assistant", "content": full_response})
+                prompt_sistema = f"SOLICITAÇÃO: {prompt}\nContexto: Responda em Português."
+                resposta_final = agent.run(prompt_sistema)
             else:
-                # Se estiver na nuvem e tentar usar o modo simples (Ollama)
-                msg_erro = "⚠️ O modo Chat Simples usa o Ollama (Local), que não está disponível na Nuvem. Por favor, ative o **Modo Agente** para usar Groq/Gemini."
-                message_placeholder.warning(msg_erro)
-                st.session_state["messages"].append({"role": "assistant", "content": msg_erro})
+                # Modo simples (sem ferramentas, mas usando o mesmo modelo selecionado)
+                # Criamos um agente sem ferramentas só para conversar
+                agent = CodeAgent(tools=[], model=modelo_agente, add_base_tools=False)
+                resposta_final = agent.run(prompt)
+
+            status.update(label="✅ Concluído!", state="complete", expanded=False)
+            message_placeholder.markdown(resposta_final)
+            st.session_state["messages"].append({"role": "assistant", "content": resposta_final})
+
+        except Exception as e:
+            status.update(label="❌ Erro", state="error")
+            st.error(f"Ocorreu um erro: {str(e)}")
+            st.warning("Dica: Se for erro de 'Connection', verifique se o Ollama está rodando (se for local) ou as chaves API (se for nuvem).")

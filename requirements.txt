@@ -1,4 +1,6 @@
-duckduckgo-search
+duckduckgo-search>=6.0.0
+# Adicionamos esta linha abaixo para corrigir o erro específico do 'ddgs'
+ddgs
 streamlit
 smolagents
 litellm

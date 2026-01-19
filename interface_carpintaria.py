@@ -10,31 +10,24 @@ from smolagents import CodeAgent, LiteLLMModel, tool
 # ==========================================
 # 📱 CONFIGURAÇÃO DOS SEUS APPS (VITRINE)
 # ==========================================
-# EDITE AQUI: Adicione os links das PWAs que você criou para os clientes
 MEUS_APPS = [
     {
         "nome": "Gestão de Estoque",
         "icone": "📦",
-        "desc": "Controle de entrada e saída de madeira e insumos.",
-        "link": "https://exemplo-estoque.streamlit.app" 
+        "desc": "Controle de entrada e saída de madeira.",
+        "link": "https://www.google.com" 
     },
     {
         "nome": "Catálogo Digital",
         "icone": "📖",
-        "desc": "Vitrine de produtos para clientes finais visualizarem.",
-        "link": "https://exemplo-catalogo.streamlit.app"
+        "desc": "Vitrine de produtos para clientes.",
+        "link": "https://www.google.com"
     },
     {
-        "nome": "Calculadora de Orçamento",
+        "nome": "Orçamentos",
         "icone": "💰",
-        "desc": "Ferramenta rápida para orçar móveis planejados.",
-        "link": "https://www.google.com" # Exemplo
-    },
-    {
-        "nome": "Agenda de Montagens",
-        "icone": "📅",
-        "desc": "Calendário de entregas e equipe externa.",
-        "link": "#"
+        "desc": "Calculadora rápida de projetos.",
+        "link": "https://www.google.com"
     }
 ]
 
@@ -46,20 +39,15 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
-# CSS CUSTOMIZADO (Design System)
+# CSS CUSTOMIZADO
 st.markdown("""
 <style>
-    /* Esconde cabeçalho padrão */
     header[data-testid="stHeader"] {background-color: transparent;}
     .stApp {background-color: #f4f6f9;}
-    
-    /* MENU LATERAL ESCURO */
     section[data-testid="stSidebar"] {
         background-color: #1e293b;
         color: white;
     }
-    
-    /* Caixa do Logo */
     .logo-box {
         background-color: #0f172a;
         padding: 20px;
@@ -68,13 +56,9 @@ st.markdown("""
         margin-bottom: 20px;
         border: 1px solid #334155;
     }
-    
-    /* Textos do menu */
     section[data-testid="stSidebar"] p, section[data-testid="stSidebar"] span {
         color: #e2e8f0 !important;
     }
-    
-    /* Estilo dos Cartões do Dumbanengue */
     div[data-testid="stContainer"] {
         background-color: white;
         border-radius: 10px;
@@ -104,7 +88,7 @@ def verificar_acesso():
 
 if not verificar_acesso(): st.stop()
 
-# --- 3. FERRAMENTAS DA IA ---
+# --- 3. FERRAMENTAS DA IA (CORRIGIDAS COM ARGS) ---
 try:
     from duckduckgo_search import DDGS
     BUSCA_DISPONIVEL = True
@@ -118,9 +102,16 @@ except: OLLAMA_AVAILABLE = False
 
 from ferramentas_avancadas import consultar_documentos, salvar_arquivo, ler_arquivo
 
+# --- AQUI ESTAVA O ERRO: Adicionada a seção Args: em todas as tools ---
+
 @tool
 def scraper_web(url: str) -> str:
-    """Lê o conteúdo de texto de um site."""
+    """
+    Lê o conteúdo de texto de um site.
+    
+    Args:
+        url: O endereço URL do site para ler.
+    """
     try:
         headers = {'User-Agent': 'Mozilla/5.0'}
         response = requests.get(url, headers=headers, timeout=10)
@@ -131,7 +122,12 @@ def scraper_web(url: str) -> str:
 
 @tool
 def buscar_na_web(termo: str) -> str:
-    """Pesquisa no DuckDuckGo."""
+    """
+    Pesquisa no DuckDuckGo (internet).
+    
+    Args:
+        termo: O texto a ser pesquisado.
+    """
     if not BUSCA_DISPONIVEL: return "Erro: Busca indisponível."
     try:
         results = DDGS().text(termo, max_results=3)
@@ -140,7 +136,12 @@ def buscar_na_web(termo: str) -> str:
 
 @tool
 def analisar_dados_csv(caminho_arquivo: str) -> str:
-    """Lê CSV/Excel e retorna estatísticas."""
+    """
+    Lê CSV/Excel e retorna estatísticas.
+    
+    Args:
+        caminho_arquivo: O caminho para o arquivo.
+    """
     try:
         if caminho_arquivo.endswith('.csv'): df = pd.read_csv(caminho_arquivo)
         elif caminho_arquivo.endswith('.xlsx'): df = pd.read_excel(caminho_arquivo)
@@ -164,7 +165,7 @@ with st.sidebar:
     menu_selecionado = st.radio(
         "Navegação:",
         ["🚪 Entrada", "💼 Escritório (IA)", "🛒 Dumbanengue (Apps)"],
-        index=0 
+        index=1 
     )
     
     st.markdown("---")
@@ -268,21 +269,14 @@ elif menu_selecionado == "🛒 Dumbanengue (Apps)":
     st.markdown("Acesso direto às soluções da Carpintaria Digital.")
     st.markdown("---")
     
-    # LÓGICA DO GRID (Calcula quantas colunas e linhas)
-    colunas = st.columns(3) # Grade de 3 colunas
+    colunas = st.columns(3)
     
     for index, app in enumerate(MEUS_APPS):
-        coluna_atual = colunas[index % 3] # Distribui entre as 3 colunas
+        coluna_atual = colunas[index % 3]
         
         with coluna_atual:
-            # Cria um cartão visual para o app com borda
             with st.container(border=True):
                 st.markdown(f"## {app['icone']}")
                 st.markdown(f"**{app['nome']}**")
                 st.caption(app['desc'])
-                
-                # Botão que leva para o link
                 st.link_button(f"Abrir {app['nome']} ↗", app['link'], use_container_width=True)
-
-    st.markdown("---")
-    st.info("ℹ️ Para adicionar mais aplicativos, contate o administrador do sistema.")

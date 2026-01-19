@@ -20,8 +20,8 @@ st.set_page_config(
 def verificar_acesso():
     """Bloqueia o app até a senha correta ser inserida."""
     # Se não houver senha configurada nos secrets, libera acesso (modo dev)
+    # Isso evita travar se você ainda não configurou os secrets
     if "APP_PASSWORD" not in st.secrets:
-        st.warning("⚠️ Atenção: Configure 'APP_PASSWORD' nos Secrets para proteger este App.")
         return True
 
     if "senha_correta" not in st.session_state:
@@ -43,7 +43,7 @@ def verificar_acesso():
 if not verificar_acesso():
     st.stop()
 
-# --- URL DO SEU LOGOTIPO (Substitua este link pelo Raw do GitHub do seu logo) ---
+# --- URL DO SEU LOGOTIPO ---
 LOGO_URL = "Carpintaria Digital Logo.png" 
 
 # --- CONFIGURAÇÃO PWA (Visual de App) ---
@@ -95,10 +95,8 @@ try:
 except ImportError:
     BUSCA_DISPONIVEL = False
 
-# Verifica se OLLAMA está disponível (apenas localmente)
 try:
     import ollama
-    # Tenta uma conexão rápida. Se falhar, assume que é nuvem.
     ollama.list() 
     OLLAMA_AVAILABLE = True
 except:
@@ -107,12 +105,17 @@ except:
 from ferramentas_avancadas import consultar_documentos, salvar_arquivo, ler_arquivo
 
 # ==========================================
-# 🚀 FERRAMENTAS
+# 🚀 FERRAMENTAS (CORRIGIDAS COM ARGS)
 # ==========================================
 
 @tool
 def scraper_web(url: str) -> str:
-    """Lê o conteúdo de texto de um site."""
+    """
+    Lê o conteúdo de texto de um site.
+    
+    Args:
+        url: O endereço URL do site para ler (começando com http).
+    """
     try:
         headers = {'User-Agent': 'Mozilla/5.0'}
         response = requests.get(url, headers=headers, timeout=10)
@@ -123,7 +126,12 @@ def scraper_web(url: str) -> str:
 
 @tool
 def buscar_na_web(termo: str) -> str:
-    """Pesquisa no DuckDuckGo (internet)."""
+    """
+    Pesquisa no DuckDuckGo (internet).
+    
+    Args:
+        termo: O texto ou assunto a ser pesquisado.
+    """
     if not BUSCA_DISPONIVEL: return "Erro: Biblioteca de busca ausente."
     try:
         results = DDGS().text(termo, max_results=3)
@@ -132,7 +140,12 @@ def buscar_na_web(termo: str) -> str:
 
 @tool
 def analisar_dados_csv(caminho_arquivo: str) -> str:
-    """Lê CSV/Excel e retorna estatísticas."""
+    """
+    Lê CSV/Excel e retorna estatísticas.
+    
+    Args:
+        caminho_arquivo: O caminho para o arquivo CSV ou Excel.
+    """
     try:
         if caminho_arquivo.endswith('.csv'): df = pd.read_csv(caminho_arquivo)
         elif caminho_arquivo.endswith('.xlsx'): df = pd.read_excel(caminho_arquivo)
@@ -159,7 +172,6 @@ with st.sidebar:
         # OpenRouter
         opcoes_modelos["🌐 OpenRouter (DeepSeek)"] = ("openrouter/deepseek/deepseek-r1:free", "OPENROUTER_API_KEY")
 
-        # Opções Locais (só aparecem se detectar Ollama rodando)
         if OLLAMA_AVAILABLE:
             opcoes_modelos["🏠 Local: Qwen 2.5"] = ("ollama/qwen2.5-coder:3b", None)
             opcoes_modelos["🏠 Local: Llama 3.2"] = ("ollama/llama3.2:latest", None)
@@ -196,7 +208,6 @@ if prompt := st.chat_input("Como posso ajudar na Carpintaria hoje?"):
 
         try:
             api_key = os.environ.get(api_env_var) if api_env_var else None
-            # Verifica secrets se a env var não estiver carregada (comum no Streamlit Cloud)
             if api_env_var and not api_key and api_env_var in st.secrets:
                 api_key = st.secrets[api_env_var]
 

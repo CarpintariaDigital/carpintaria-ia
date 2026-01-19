@@ -9,3 +9,5 @@ groq
 google-generativeai
 pandas
 numpy
+langchain-google-genai
+langchain-ollama

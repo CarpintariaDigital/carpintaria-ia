@@ -1,0 +1,11 @@
+streamlit
+smolagents
+litellm
+langchain
+langchain-community
+chromadb
+pdfplumber
+groq
+google-generativeai
+pandas
+numpy

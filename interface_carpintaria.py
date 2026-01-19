@@ -156,7 +156,7 @@ with st.sidebar:
     # LOGO
     st.markdown(f"""
     <div class="logo-box">
-        <img src="https://cdn-icons-png.flaticon.com/512/2040/2040946.png" width="80">
+        <img src="Carpintaria Digital Logo.png" width="80">
         <h3 style="color:white; margin:0; padding-top:10px;">Carpintaria OS</h3>
     </div>
     """, unsafe_allow_html=True)

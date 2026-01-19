@@ -3,11 +3,12 @@ smolagents
 litellm
 langchain
 langchain-community
+langchain-chroma
+langchain-google-genai
+langchain-ollama
 chromadb
 pdfplumber
 groq
 google-generativeai
 pandas
 numpy
-langchain-google-genai
-langchain-ollama

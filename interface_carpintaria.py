@@ -27,8 +27,16 @@ with st.sidebar:
     # A estrutura é: "Nome no Menu": ("provedor/modelo", "nome_da_variavel_api")
     
     opcoes_modelos = {
-        "☁️ Nuvem: Llama 3.3 (Groq - Super Rápido)": ("groq/llama-3.3-70b-versatile", "GROQ_API_KEY"),
-        "☁️ Nuvem: Gemini 1.5 Flash (Google - Esperto)": ("gemini/gemini-1.5-flash", "GEMINI_API_KEY"),
+    # --- GOOGLE (Free Tier) ---
+        "☁️ Google: Gemini 1.5 Flash (Rápido)": ("gemini/gemini-1.5-flash", "GEMINI_API_KEY"),
+        "☁️ Google: Gemini Pro (Estável)": ("gemini/gemini-pro", "GEMINI_API_KEY"),
+        
+        # --- OPENROUTER (DeepSeek & Outros) ---
+        "☁️ OpenRouter: DeepSeek R1 (Raciocínio Forte)": ("openrouter/deepseek/deepseek-r1-distill-llama-70b", "OPENROUTER_API_KEY"),
+        "☁️ OpenRouter: Mistral Large": ("openrouter/mistralai/mistral-large-2411", "OPENROUTER_API_KEY"),
+        
+        # --- GROQ ---
+        "☁️ Groq: Llama 3.3 (Versátil)": ("groq/llama-3.3-70b-versatile", "GROQ_API_KEY"),
     }
 
     # Se o Ollama estiver rodando (Local), adiciona as opções locais

@@ -64,7 +64,7 @@ st.set_page_config(
 )
 
 # LOGO URL (Seu logo)
-LOGO_URL = "Carpintaria Digital Logo.png"
+LOGO_URL = "CarpintariaDigitalLogo.png"
 
 # --- CSS PREMIUM (UI/UX) ---
 st.markdown("""

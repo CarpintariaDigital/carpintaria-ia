@@ -1,29 +1,43 @@
 import streamlit as st
 import os
 import pandas as pd
-import matplotlib.pyplot as plt
 import requests
 from bs4 import BeautifulSoup
 from smolagents import CodeAgent, LiteLLMModel, tool
 
-# --- 1. CONFIGURAÇÃO VISUAL PROFISSIONAL ---
+# --- 1. CONFIGURAÇÃO PWA & VISUAL ---
 st.set_page_config(
     page_title="Carpintaria OS", 
     page_icon="🛠️", 
     layout="wide",
-    initial_sidebar_state="expanded"
+    initial_sidebar_state="collapsed" # Começa fechado para parecer app mobile
 )
 
+# CSS HACK PARA PARECER UM APP (Remove cabeçalhos padrão do Streamlit)
 st.markdown("""
 <style>
-    .stChatInput {border-radius: 20px;}
-    .block-container {padding-top: 2rem;}
-    h1 {color: #2e4053;}
+    /* Esconde o menu hamburger do Streamlit e rodapé */
+    #MainMenu {visibility: hidden;}
+    footer {visibility: hidden;}
+    header {visibility: hidden;}
+    
+    /* Estilo de App Moderno */
+    .stApp {
+        background-color: #f8f9fa;
+    }
+    .stChatInput {
+        border-radius: 25px !important;
+        border: 1px solid #ddd;
+    }
+    h1 {
+        color: #2c3e50;
+        font-size: 1.8rem;
+        text-align: center;
+    }
 </style>
 """, unsafe_allow_html=True)
 
-st.title("🛠️ Carpintaria OS: Enterprise AI")
-st.markdown("---")
+st.title("🛠️ Carpintaria OS")
 
 # --- VERIFICAÇÕES DE SISTEMA ---
 try:
@@ -39,7 +53,6 @@ try:
 except ImportError:
     BUSCA_DISPONIVEL = False
 
-# --- IMPORTAÇÃO DE FERRAMENTAS EXISTENTES ---
 from ferramentas_avancadas import consultar_documentos, salvar_arquivo, ler_arquivo
 
 # ==========================================
@@ -47,23 +60,11 @@ from ferramentas_avancadas import consultar_documentos, salvar_arquivo, ler_arqu
 # ==========================================
 
 @tool
-def obter_localizacao() -> str:
-    """
-    Identifica a localização atual (Cidade, País) via IP.
-    """
-    try:
-        response = requests.get("https://ipinfo.io/json")
-        data = response.json()
-        return f"Localização: {data.get('city')}, {data.get('country')}"
-    except Exception as e:
-        return f"Erro localizacao: {str(e)}"
-
-@tool
 def scraper_web(url: str) -> str:
     """
-    Lê o texto de um site.
+    Lê o texto de um site (Notícias, Manuais, Artigos).
     Args:
-        url: O endereço do site.
+        url: O endereço do site (http://...).
     """
     try:
         headers = {'User-Agent': 'Mozilla/5.0'}
@@ -78,7 +79,7 @@ def scraper_web(url: str) -> str:
 @tool
 def buscar_na_web(termo: str) -> str:
     """
-    Pesquisa no DuckDuckGo.
+    Pesquisa no DuckDuckGo. Use para preços e dados atuais.
     Args:
         termo: O que pesquisar.
     """
@@ -104,23 +105,20 @@ def analisar_dados_csv(caminho_arquivo: str) -> str:
     except Exception as e: return f"Erro: {str(e)}"
 
 # ==========================================
-# ⚙️ CONFIGURAÇÕES
+# ⚙️ CONFIGURAÇÕES (SIDEBAR)
 # ==========================================
 with st.sidebar:
     st.image("https://cdn-icons-png.flaticon.com/512/2040/2040946.png", width=50)
-    st.markdown("### Painel de Controle")
+    st.markdown("### Configurações")
     
-    with st.expander("🧠 Configuração do Cérebro", expanded=True):
+    # LOCALIZAÇÃO MANUAL (CORREÇÃO DO PROBLEMA DE IP)
+    local_usuario = st.text_input("📍 Sua Cidade/País", value="Maputo, Moçambique")
+    
+    with st.expander("🧠 Cérebro da IA", expanded=False):
         opcoes_modelos = {}
-        
-        # Google
         opcoes_modelos["☁️ Gemini 2.5 Flash"] = ("gemini/gemini-2.5-flash", "GEMINI_API_KEY")
         opcoes_modelos["☁️ Gemini 2.5 Pro"] = ("gemini/gemini-2.5-pro", "GEMINI_API_KEY")
-        
-        # Groq
         opcoes_modelos["🚀 Groq Llama 3.3"] = ("groq/llama-3.3-70b-versatile", "GROQ_API_KEY")
-        
-        # OpenRouter
         opcoes_modelos["🌐 OpenRouter (DeepSeek)"] = ("openrouter/deepseek/deepseek-r1:free", "OPENROUTER_API_KEY")
 
         if OLLAMA_AVAILABLE:
@@ -132,12 +130,7 @@ with st.sidebar:
 
         criatividade = st.slider("Criatividade", 0.0, 1.0, 0.2, 0.1)
 
-    with st.expander("🧰 Ferramentas Ativas", expanded=False):
-        st.caption("✅ Geolocalização")
-        st.caption("✅ Web Scraping")
-        st.caption("✅ Análise de Dados")
-
-    if st.button("🗑️ Nova Conversa", type="primary"):
+    if st.button("🗑️ Limpar Chat"):
         st.session_state["messages"] = []
         st.rerun()
 
@@ -149,14 +142,15 @@ for msg in st.session_state["messages"]:
     with st.chat_message(msg["role"]):
         st.markdown(msg["content"])
 
-if prompt := st.chat_input("Digite sua solicitação..."):
+if prompt := st.chat_input("Digite aqui..."):
     st.session_state["messages"].append({"role": "user", "content": prompt})
     with st.chat_message("user"):
         st.markdown(prompt)
 
     with st.chat_message("assistant"):
         placeholder = st.empty()
-        status = st.status("🧠 Pensando...", expanded=False)
+        # Status menor e mais discreto para mobile
+        status = st.status("⚙️", expanded=False)
 
         try:
             api_key = os.environ.get(api_env_var) if api_env_var else None
@@ -167,26 +161,34 @@ if prompt := st.chat_input("Digite sua solicitação..."):
                 max_tokens=4000, temperature=criatividade
             )
 
-            tools_list = [consultar_documentos, salvar_arquivo, ler_arquivo, analisar_dados_csv, scraper_web, obter_localizacao]
+            tools_list = [consultar_documentos, salvar_arquivo, ler_arquivo, analisar_dados_csv, scraper_web]
             if BUSCA_DISPONIVEL: tools_list.append(buscar_na_web)
 
-            # --- CORREÇÃO AQUI ---
-            # Removemos 'plt' da lista abaixo
+            # AGENTE (Sem 'plt' nos imports para não dar erro)
             agent = CodeAgent(
                 tools=tools_list, model=modelo, add_base_tools=True,
-                additional_authorized_imports=['datetime', 'numpy', 'pandas', 'matplotlib', 'requests', 'bs4', 'json', 'os']
+                additional_authorized_imports=['datetime', 'numpy', 'pandas', 'requests', 'bs4', 'json', 'os']
             )
 
-            prompt_contexto = f"USUÁRIO: {prompt}\n\nNota: Se perguntarem sobre localização, use 'obter_localizacao'."
+            # INJETANDO A LOCALIZAÇÃO CORRETA NO CONTEXTO
+            prompt_contexto = f"""
+            CONTEXTO DO USUÁRIO:
+            - Localização Real: {local_usuario}
+            - Solicitação: {prompt}
+            
+            DIRETRIZES:
+            - Se precisar buscar preços ou clima, use a localização '{local_usuario}'.
+            - Responda de forma direta e profissional.
+            """
             
             response = agent.run(prompt_contexto)
             
-            status.update(label="✅ Feito", state="complete")
+            status.update(label="✓", state="complete")
             placeholder.markdown(response)
             st.session_state["messages"].append({"role": "assistant", "content": response})
             
             if os.path.exists("chart.png"): st.image("chart.png")
 
         except Exception as e:
-            status.update(label="❌ Erro", state="error")
+            status.update(label="Erro", state="error")
             st.error(f"Erro: {e}")

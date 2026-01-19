@@ -35,6 +35,7 @@ def carregar_dados(tipo):
 
 def salvar_dados(tipo, df):
     arquivo = DB_FILES.get(tipo)
+    # Salva com formato de data ISO para evitar erros de leitura depois
     df.to_json(arquivo, orient="records", date_format="iso")
 
 # ==========================================
@@ -99,13 +100,9 @@ def verificar_acesso():
         return False
     return True
 
-# Lógica de bloqueio: Entrada e Dumbanengue são públicos, o resto exige senha.
-# Vamos controlar isso dentro da navegação.
-
 # ==========================================
-# 🧠 FERRAMENTAS IA
+# 🧠 FERRAMENTAS IA (CORRIGIDO)
 # ==========================================
-# (Mantendo as ferramentas da versão anterior para o Chat IA)
 try:
     from duckduckgo_search import DDGS
     BUSCA_DISPONIVEL = True
@@ -120,7 +117,12 @@ from ferramentas_avancadas import consultar_documentos, salvar_arquivo, ler_arqu
 
 @tool
 def buscar_na_web(termo: str) -> str:
-    """Pesquisa no DuckDuckGo (internet). Args: termo: O texto a pesquisar."""
+    """
+    Pesquisa na internet usando o DuckDuckGo para encontrar informações atuais.
+    
+    Args:
+        termo: O texto ou assunto que será pesquisado.
+    """
     if not BUSCA_DISPONIVEL: return "Erro: Busca indisponível."
     try:
         results = DDGS().text(termo, max_results=3)
@@ -134,7 +136,7 @@ with st.sidebar:
     st.markdown("""
     <div style="background:#1f2937; padding:15px; border-radius:10px; text-align:center; margin-bottom:20px;">
         <h2 style="color:white; margin:0;">🪵 Carpintaria</h2>
-        <p style="color:#9ca3af; font-size:0.8rem;">Operating System v4.0</p>
+        <p style="color:#9ca3af; font-size:0.8rem;">Operating System v4.1</p>
     </div>
     """, unsafe_allow_html=True)
 
@@ -152,6 +154,7 @@ with st.sidebar:
                 ["📊 Dashboard Geral", "📂 Projetos & Serviços", "👥 Clientes (CRM)", "💰 Financeiro", "🧠 Escritório IA"]
             )
             
+            st.markdown("---")
             if st.button("💾 Backup dos Dados"):
                 # Cria um JSON com tudo para baixar
                 dados_backup = {
@@ -165,7 +168,8 @@ with st.sidebar:
                 st.session_state["senha_correta"] = False
                 st.rerun()
         else:
-            st.stop() # Para a execução da sidebar se não logar
+            # Se não estiver logado, para a execução do sidebar aqui
+            st.stop() 
 
 # ==========================================
 # 🖥️ PÁGINAS DO SISTEMA
@@ -207,7 +211,8 @@ elif menu == "🔒 Acesso Interno":
         
         # KPIs
         c1, c2, c3, c4 = st.columns(4)
-        c1.metric("Projetos Ativos", len(df_proj[df_proj["Status"] == "Em Andamento"]))
+        projetos_ativos = len(df_proj[df_proj["Status"] == "Em Andamento"]) if not df_proj.empty else 0
+        c1.metric("Projetos Ativos", projetos_ativos)
         
         # Cálculo financeiro simples (tratamento de erro se vazio)
         receita = df_fin[df_fin["Tipo"]=="Entrada"]["Valor"].sum() if not df_fin.empty else 0.0
@@ -215,7 +220,7 @@ elif menu == "🔒 Acesso Interno":
         
         c2.metric("Receita Total", f"MT {receita:,.2f}")
         c3.metric("Despesas", f"MT {despesa:,.2f}")
-        c4.metric("Lucro Líquido", f"MT {receita - despesa:,.2f}", delta_color="normal")
+        c4.metric("Lucro Líquido", f"MT {receita - despesa:,.2f}")
         
         st.markdown("### 📅 Cronograma Recente")
         if not df_proj.empty:
@@ -323,7 +328,20 @@ elif menu == "🔒 Acesso Interno":
         st.title("🧠 Inteligência Artificial")
         st.caption("Seu assistente técnico para código e análise.")
         
-        # Lógica do Chat (Simplificada da versão anterior)
+        # Configuração do Agente
+        with st.expander("⚙️ Configuração do Modelo"):
+            opcoes_modelos = {}
+            opcoes_modelos["☁️ Gemini 2.5 Flash"] = ("gemini/gemini-2.5-flash", "GEMINI_API_KEY")
+            opcoes_modelos["🚀 Groq Llama 3.3"] = ("groq/llama-3.3-70b-versatile", "GROQ_API_KEY")
+            
+            if OLLAMA_AVAILABLE:
+                opcoes_modelos["🏠 Local: Qwen 2.5"] = ("ollama/qwen2.5-coder:3b", None)
+            
+            nome_escolhido = st.selectbox("Modelo:", list(opcoes_modelos.keys()))
+            model_id, api_env_var = opcoes_modelos[nome_escolhido]
+            criatividade = st.slider("Criatividade", 0.0, 1.0, 0.2)
+        
+        # Chat Logic
         if "messages" not in st.session_state: st.session_state["messages"] = []
         
         for msg in st.session_state["messages"]:
@@ -333,7 +351,33 @@ elif menu == "🔒 Acesso Interno":
             st.session_state["messages"].append({"role": "user", "content": prompt})
             with st.chat_message("user"): st.markdown(prompt)
             
-            # (Aqui entra a conexão com a IA - mantive simples para caber no código)
-            # Você deve configurar a API Key na sidebar ou secrets
-            st.warning("⚠️ Configure a API Key na aba Configurações (código anterior) para ativar a resposta.")
-            # Para integrar totalmente, copie o bloco `try/except` com CodeAgent da resposta anterior para cá.
+            with st.chat_message("assistant"):
+                placeholder = st.empty()
+                status = st.status("🧠 Pensando...", expanded=False)
+                try:
+                    api_key = os.environ.get(api_env_var) if api_env_var else None
+                    if api_env_var and not api_key and api_env_var in st.secrets:
+                        api_key = st.secrets[api_env_var]
+                    
+                    base_url = "http://localhost:11434" if "ollama" in model_id else None
+                    
+                    modelo = LiteLLMModel(
+                        model_id=model_id, api_key=api_key, api_base=base_url,
+                        max_tokens=4000, temperature=criatividade
+                    )
+                    
+                    tools_list = [consultar_documentos, salvar_arquivo, ler_arquivo]
+                    if BUSCA_DISPONIVEL: tools_list.append(buscar_na_web)
+                    
+                    agent = CodeAgent(
+                        tools=tools_list, model=modelo, add_base_tools=True,
+                        additional_authorized_imports=['datetime', 'numpy', 'pandas', 'requests', 'bs4', 'json', 'os']
+                    )
+                    
+                    response = agent.run(prompt)
+                    status.update(label="✓", state="complete")
+                    placeholder.markdown(response)
+                    st.session_state["messages"].append({"role": "assistant", "content": response})
+                except Exception as e:
+                    status.update(label="Erro", state="error")
+                    st.error(f"Erro: {e}")

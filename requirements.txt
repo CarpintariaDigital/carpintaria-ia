@@ -19,3 +19,4 @@ beautifulsoup4
 requests
 matplotlib
 openpyxl
+qrcode[pil]

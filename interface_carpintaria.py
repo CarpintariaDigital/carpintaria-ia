@@ -64,7 +64,7 @@ st.set_page_config(
 )
 
 # LOGO URL (Seu logo)
-LOGO_URL = "https://cdn-icons-png.flaticon.com/512/2040/2040946.png"
+LOGO_URL = "Carpintaria Digital Logo.png"
 
 # --- CSS PREMIUM (UI/UX) ---
 st.markdown("""

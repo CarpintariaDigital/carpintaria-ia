@@ -1,0 +1,574 @@
+<!DOCTYPE html>
+<html lang="pt">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Txiling | Gestão de Eventos</title>
+
+    <link
+        href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&family=Inter:wght@300;400;600&family=Fira+Code:wght@500&display=swap"
+        rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+
+    <link rel="manifest" href="manifest.json">
+
+    <style>
+        /* --- DESIGN SYSTEM (Txiling Gold Edition) --- */
+        :root {
+            --bg-body: #F8FAFC;
+            --bg-panel: #FFFFFF;
+            --brand-dark: #0f172a;
+            --brand-gold: #d4af37;
+            --brand-accent: #0ea5e9;
+            --text-main: #334155;
+            --border: 1px solid rgba(0, 0, 0, 0.08);
+            --shadow: 0 20px 40px -10px rgba(0, 0, 0, 0.1);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background-color: var(--bg-body);
+            color: var(--text-main);
+            font-family: 'Inter', sans-serif;
+            overflow-x: hidden;
+        }
+
+        /* --- HEADER --- */
+        header {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            padding: 1rem 2rem;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            border-bottom: var(--border);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .back-link {
+            text-decoration: none;
+            color: var(--text-main);
+            font-weight: 500;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            transition: 0.3s;
+        }
+
+        .back-link:hover {
+            color: var(--brand-gold);
+            transform: translateX(-5px);
+        }
+
+        .logo {
+            font-family: 'Playfair Display';
+            font-weight: 900;
+            font-size: 1.5rem;
+            color: var(--brand-dark);
+        }
+
+        /* --- HERO SECTION --- */
+        .hero {
+            text-align: center;
+            padding: 4rem 2rem;
+            background: radial-gradient(circle at center, #fff 0%, #f1f5f9 100%);
+        }
+
+        .hero h1 {
+            font-family: 'Playfair Display';
+            font-size: 3.5rem;
+            color: var(--brand-dark);
+            line-height: 1.1;
+            margin-bottom: 1rem;
+        }
+
+        .hero p {
+            color: #64748b;
+            font-size: 1.1rem;
+            max-width: 600px;
+            margin: 0 auto 2rem auto;
+        }
+
+        .hero-badge {
+            background: #fffbeb;
+            color: #b45309;
+            padding: 5px 15px;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            display: inline-block;
+            margin-bottom: 1rem;
+            border: 1px solid #fcd34d;
+        }
+
+        /* --- SIMULADOR (A Mágica) --- */
+        .simulator-container {
+            max-width: 1000px;
+            margin: 0 auto 4rem auto;
+            padding: 0 2rem;
+            display: grid;
+            grid-template-columns: 1.2fr 0.8fr;
+            gap: 2rem;
+        }
+
+        .panel {
+            background: var(--bg-panel);
+            padding: 2rem;
+            border-radius: 24px;
+            box-shadow: var(--shadow);
+            border: var(--border);
+        }
+
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+
+        .form-label {
+            display: block;
+            font-size: 0.85rem;
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+            color: var(--brand-dark);
+        }
+
+        .input-box {
+            width: 100%;
+            padding: 12px 15px;
+            border: 1px solid #cbd5e1;
+            border-radius: 12px;
+            font-size: 1rem;
+            font-family: 'Inter';
+            outline: none;
+            transition: 0.3s;
+            background: #f8fafc;
+        }
+
+        .input-box:focus {
+            border-color: var(--brand-gold);
+            background: white;
+            box-shadow: 0 0 0 3px rgba(212, 175, 55, 0.1);
+        }
+
+        .toggle-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 12px;
+            border: 1px solid #e2e8f0;
+            border-radius: 12px;
+            margin-bottom: 10px;
+            cursor: pointer;
+            transition: 0.2s;
+        }
+
+        .toggle-row:hover {
+            border-color: var(--brand-gold);
+            background: #fffdf5;
+        }
+
+        .toggle-row input {
+            width: 18px;
+            height: 18px;
+            accent-color: var(--brand-gold);
+        }
+
+        .receipt {
+            background: var(--brand-dark);
+            color: white;
+            border-radius: 24px;
+            padding: 2rem;
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+        }
+
+        .receipt-header {
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            padding-bottom: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .receipt-item {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 0.8rem;
+            font-size: 0.9rem;
+            color: rgba(255, 255, 255, 0.7);
+        }
+
+        .receipt-total {
+            font-family: 'Fira Code', monospace;
+            font-size: 2.5rem;
+            color: var(--brand-gold);
+            font-weight: 700;
+            text-align: right;
+            margin: 1rem 0;
+        }
+
+        .btn-whatsapp {
+            background: #25D366;
+            color: white;
+            text-decoration: none;
+            padding: 15px;
+            border-radius: 12px;
+            text-align: center;
+            font-weight: 600;
+            display: block;
+            transition: 0.3s;
+            border: 1px solid transparent;
+        }
+
+        .btn-whatsapp:hover {
+            background: #1ebc57;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(37, 211, 102, 0.3);
+        }
+
+        /* --- PORTFÓLIO VISUAL --- */
+        .portfolio-section {
+            padding: 2rem 2rem 5rem 2rem;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .gallery-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 2rem;
+            margin-top: 2rem;
+        }
+
+        .gallery-item {
+            position: relative;
+            border-radius: 20px;
+            overflow: hidden;
+            height: 350px;
+            box-shadow: var(--shadow);
+            cursor: pointer;
+            border: 1px solid rgba(0, 0, 0, 0.05);
+        }
+
+        .gallery-img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            transition: transform 0.5s ease;
+        }
+
+        .gallery-item:hover .gallery-img {
+            transform: scale(1.1);
+        }
+
+        .gallery-overlay {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            background: linear-gradient(to top, rgba(15, 23, 42, 0.95), transparent);
+            padding: 2rem 1.5rem 1.5rem 1.5rem;
+            color: white;
+            transform: translateY(20px);
+            opacity: 0.9;
+            transition: 0.3s;
+        }
+
+        .gallery-item:hover .gallery-overlay {
+            transform: translateY(0);
+            opacity: 1;
+        }
+
+        .tag-cat {
+            font-size: 0.7rem;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            color: var(--brand-gold);
+            margin-bottom: 5px;
+            display: block;
+        }
+
+        .btn-mini-action {
+            display: inline-block;
+            margin-top: 10px;
+            font-size: 0.8rem;
+            color: white;
+            border: 1px solid var(--brand-gold);
+            padding: 5px 15px;
+            border-radius: 20px;
+            text-decoration: none;
+            transition: 0.3s;
+        }
+
+        .btn-mini-action:hover {
+            background: var(--brand-gold);
+            color: black;
+        }
+
+        /* --- FEATURES --- */
+        .features {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 2rem;
+            max-width: 1000px;
+            margin: 0 auto 4rem auto;
+            padding: 0 2rem;
+        }
+
+        .feature-card {
+            text-align: center;
+            padding: 2rem;
+            background: white;
+            border-radius: 16px;
+            border: var(--border);
+        }
+
+        .f-icon {
+            font-size: 2rem;
+            color: var(--brand-gold);
+            margin-bottom: 1rem;
+        }
+
+        @media (max-width: 768px) {
+            .simulator-container {
+                grid-template-columns: 1fr;
+            }
+
+            .hero h1 {
+                font-size: 2.5rem;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <header>
+        <a href="/store" class="back-link">
+            <i class="fa-solid fa-arrow-left"></i> Voltar à Loja
+        </a>
+        <div class="logo">Txiling<span style="color: var(--brand-gold);">.</span></div>
+        <div style="width: 100px;"></div>
+    </header>
+
+    <section class="hero">
+        <div class="hero-badge">Best Seller</div>
+        <h1>Eventos Memoráveis<br><span style="color: var(--brand-gold); font-style: italic;">Sem Complicações.</span>
+        </h1>
+        <p>A plataforma completa para casamentos, conferências e festas. <br>Bilhetes QR Code, gestão de convidados e
+            check-in offline.</p>
+    </section>
+
+    <section class="simulator-container">
+
+        <div class="panel">
+            <h3 style="margin-bottom: 1.5rem; font-family: 'Playfair Display'; color: var(--brand-dark);">Configure o
+                seu Evento</h3>
+
+            <div class="form-group">
+                <label class="form-label">Tipo de Evento</label>
+                <select id="tipoEvento" class="input-box">
+                    <option value="5000">Casamento (Base 5.000 MT)</option>
+                    <option value="3000">Aniversário (Base 3.000 MT)</option>
+                    <option value="10000">Conferência Corp. (Base 10.000 MT)</option>
+                    <option value="15000">Show / Festival (Base 15.000 MT)</option>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label class="form-label">Número de Convidados</label>
+                <input type="number" id="convidados" value="100" class="input-box" min="10">
+            </div>
+
+            <label class="form-label" style="margin-top: 1.5rem;">Extras Tecnológicos</label>
+
+            <label class="toggle-row">
+                <span><i class="fa-solid fa-envelope-open-text"
+                        style="color: var(--brand-gold); margin-right: 10px;"></i> Convites Digitais Interativos</span>
+                <input type="checkbox" id="checkConvites">
+            </label>
+
+            <label class="toggle-row">
+                <span><i class="fa-brands fa-whatsapp" style="color: #25D366; margin-right: 10px;"></i> Bot de
+                    Confirmação WhatsApp</span>
+                <input type="checkbox" id="checkWhatsapp">
+            </label>
+
+            <label class="toggle-row">
+                <span><i class="fa-solid fa-qrcode" style="color: var(--brand-dark); margin-right: 10px;"></i> Check-in
+                    Tablet (Aluguer)</span>
+                <input type="checkbox" id="checkCheckin">
+            </label>
+        </div>
+
+        <div class="receipt">
+            <div>
+                <div class="receipt-header">
+                    <div style="font-family: 'Playfair Display'; font-size: 1.2rem;">Resumo Estimado</div>
+                    <div style="font-size: 0.8rem; color: rgba(255,255,255,0.5);">Cotação Instantânea</div>
+                </div>
+
+                <div class="receipt-item">
+                    <span>Taxa Base</span>
+                    <span id="res-base">5.000 MT</span>
+                </div>
+                <div class="receipt-item">
+                    <span>Gestão QR (<span id="res-qtd">100</span> pax)</span>
+                    <span id="res-qr">1.000 MT</span>
+                </div>
+                <div class="receipt-item" id="row-convites" style="display:none; color: var(--brand-gold);">
+                    <span>+ Convites Pro</span>
+                    <span>3.000 MT</span>
+                </div>
+                <div class="receipt-item" id="row-bot" style="display:none; color: #25D366;">
+                    <span>+ Bot WhatsApp</span>
+                    <span>2.000 MT</span>
+                </div>
+                <div class="receipt-item" id="row-tablet" style="display:none;">
+                    <span>+ Aluguer Tablets</span>
+                    <span>5.000 MT</span>
+                </div>
+            </div>
+
+            <div>
+                <div style="text-align: right; font-size: 0.8rem; text-transform: uppercase; letter-spacing: 1px;">
+                    Investimento Total</div>
+                <div class="receipt-total" id="totalDisplay">0 MT</div>
+
+                <a id="btnWhatsapp" href="#" class="btn-whatsapp" target="_blank">
+                    <i class="fa-brands fa-whatsapp"></i> Receber Proposta Oficial
+                </a>
+                <div style="text-align: center; margin-top: 10px; font-size: 0.7rem; opacity: 0.6;">
+                    Sem compromisso. Pagamento flexível.
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section class="portfolio-section">
+        <div style="text-align: center; margin-bottom: 3rem;">
+            <h2 style="font-family: 'Playfair Display'; color: var(--brand-dark); font-size: 2.5rem;">O Nosso Traço</h2>
+            <p style="color: #64748b;">Design premium que reflete a importância do seu momento.</p>
+        </div>
+
+        <div class="gallery-grid">
+            <div class="gallery-item">
+                <img src="https://images.unsplash.com/photo-1607190074257-dd4b7af0309f?q=80&w=800" class="gallery-img"
+                    alt="Convite Casamento">
+                <div class="gallery-overlay">
+                    <span class="tag-cat">Casamentos</span>
+                    <h3>Convites Interativos</h3>
+                    <p style="font-size: 0.9rem; color: #cbd5e1; margin-bottom: 0;">Com botão de confirmação e mapa GPS.
+                    </p>
+                    <a href="https://wa.me/258840000000?text=Olá! Gostei do modelo de Convite de Casamento."
+                        target="_blank" class="btn-mini-action">Quero este estilo</a>
+                </div>
+            </div>
+            <div class="gallery-item">
+                <img src="https://images.unsplash.com/photo-1556761175-5973dc0f32e7?q=80&w=800" class="gallery-img"
+                    alt="Flyer Corporativo">
+                <div class="gallery-overlay">
+                    <span class="tag-cat">Corporativo</span>
+                    <h3>Flyers & Webinars</h3>
+                    <p style="font-size: 0.9rem; color: #cbd5e1; margin-bottom: 0;">Design para redes sociais e
+                        apresentações.</p>
+                    <a href="https://wa.me/258840000000?text=Olá! Preciso de Flyers para Webinar." target="_blank"
+                        class="btn-mini-action">Ver Pacotes</a>
+                </div>
+            </div>
+            <div class="gallery-item">
+                <img src="https://images.unsplash.com/photo-1540039155733-5bb30b53aa14?q=80&w=800" class="gallery-img"
+                    alt="Bilhetes QR">
+                <div class="gallery-overlay">
+                    <span class="tag-cat">Tecnologia</span>
+                    <h3>Bilhetes Seguros</h3>
+                    <p style="font-size: 0.9rem; color: #cbd5e1; margin-bottom: 0;">Sistemas de acesso à prova de
+                        fraude.</p>
+                    <a href="https://wa.me/258840000000?text=Olá! Quero saber mais sobre Bilhetes QR." target="_blank"
+                        class="btn-mini-action">Saber Mais</a>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section class="features">
+        <div class="feature-card">
+            <i class="fa-solid fa-wifi f-icon"></i>
+            <h3>100% Offline</h3>
+            <p style="color: #64748b; font-size: 0.9rem;">A internet caiu? O sistema continua a validar bilhetes sem
+                falhas.</p>
+        </div>
+        <div class="feature-card">
+            <i class="fa-solid fa-chart-pie f-icon"></i>
+            <h3>Relatórios Reais</h3>
+            <p style="color: #64748b; font-size: 0.9rem;">Saiba exatamente quem entrou, a que horas e estatísticas de
+                consumo.</p>
+        </div>
+        <div class="feature-card">
+            <i class="fa-solid fa-shield-halved f-icon"></i>
+            <h3>Anti-Fraude</h3>
+            <p style="color: #64748b; font-size: 0.9rem;">QR Codes encriptados que não podem ser copiados.</p>
+        </div>
+    </section>
+
+    <footer style="text-align: center; padding: 2rem; color: #94a3b8; font-size: 0.8rem; border-top: var(--border);">
+        <p>© 2026 Txiling • Powered by Carpintaria Digital</p>
+    </footer>
+
+    <script>
+        function calcular() {
+            let base = parseInt(document.getElementById('tipoEvento').value);
+            let qtd = parseInt(document.getElementById('convidados').value) || 0;
+            let custoQR = qtd * 10;
+
+            let temConvite = document.getElementById('checkConvites').checked;
+            let temBot = document.getElementById('checkWhatsapp').checked;
+            let temTablet = document.getElementById('checkCheckin').checked;
+
+            let valConvite = temConvite ? 3000 : 0;
+            let valBot = temBot ? 2000 : 0;
+            let valTablet = temTablet ? 5000 : 0;
+
+            let total = base + custoQR + valConvite + valBot + valTablet;
+
+            document.getElementById('res-base').innerText = base.toLocaleString() + " MT";
+            document.getElementById('res-qtd').innerText = qtd;
+            document.getElementById('res-qr').innerText = custoQR.toLocaleString() + " MT";
+
+            document.getElementById('row-convites').style.display = temConvite ? 'flex' : 'none';
+            document.getElementById('row-bot').style.display = temBot ? 'flex' : 'none';
+            document.getElementById('row-tablet').style.display = temTablet ? 'flex' : 'none';
+
+            document.getElementById('totalDisplay').innerText = total.toLocaleString() + " MT";
+
+            let nomeEvento = document.getElementById('tipoEvento').options[document.getElementById('tipoEvento').selectedIndex].text;
+            let msg = `Olá Txiling! Fiz uma simulação:%0A%0A📅 *${nomeEvento}*%0A👥 Convidados: ${qtd}%0A%0A✅ Extras:%0A- Convites: ${temConvite ? 'Sim' : 'Não'}%0A- Bot Zap: ${temBot ? 'Sim' : 'Não'}%0A- Tablets: ${temTablet ? 'Sim' : 'Não'}%0A%0A💰 *Estimativa: ${total.toLocaleString()} MT*`;
+
+            document.getElementById('btnWhatsapp').href = `https://wa.me/258840000000?text=${msg}`;
+        }
+
+        document.querySelectorAll('input, select').forEach(item => {
+            item.addEventListener('input', calcular);
+            item.addEventListener('change', calcular);
+        });
+
+        calcular();
+
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('/sw.js');
+            });
+        }
+    </script>
+</body>
+
+</html>

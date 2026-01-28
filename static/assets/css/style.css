@@ -1,0 +1,97 @@
+/* --- VARIAVEIS GLOBAIS (A Nova Paleta) --- */
+:root {
+    --madeira-primary: #8b5a2b;
+    --madeira-light: #a67c52;
+    --tech-dark: #111827;
+    --tech-gray: #1f2937;
+    --tech-light: #f3f4f6;
+    --white: #ffffff;
+    --shadow: 0 10px 30px rgba(0,0,0,0.1);
+}
+
+body {
+    font-family: 'Inter', system-ui, -apple-system, sans-serif;
+    background-color: var(--tech-light);
+    color: var(--tech-dark);
+    overflow-x: hidden;
+}
+
+/* --- CABEÇALHO --- */
+.navbar-custom {
+    background: rgba(255, 255, 255, 0.95);
+    backdrop-filter: blur(10px);
+    border-bottom: 1px solid rgba(0,0,0,0.05);
+    padding: 15px 0;
+}
+.navbar-brand span {
+    font-weight: 800;
+    letter-spacing: -0.5px;
+    color: var(--tech-dark);
+}
+.nav-link {
+    font-weight: 500;
+    color: var(--tech-gray) !important;
+    margin: 0 10px;
+    transition: 0.3s;
+}
+.nav-link:hover { color: var(--madeira-primary) !important; }
+
+/* --- HERO SECTION (A Primeira Impressão) --- */
+.hero-section {
+    position: relative;
+    padding: 120px 0;
+    background: var(--tech-dark);
+    color: white;
+    overflow: hidden;
+}
+.hero-bg {
+    position: absolute;
+    top: 0; right: 0; width: 50%; height: 100%;
+    background: var(--madeira-primary);
+    clip-path: polygon(20% 0, 100% 0, 100% 100%, 0% 100%);
+    opacity: 0.1;
+}
+
+/* --- CARTÕES DAS PLATAFORMAS (UI Moderno) --- */
+.platform-card {
+    background: white;
+    border: none;
+    border-radius: 20px;
+    padding: 40px;
+    transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    border: 1px solid rgba(0,0,0,0.05);
+    height: 100%;
+    position: relative;
+    overflow: hidden;
+}
+
+.platform-card:hover {
+    transform: translateY(-10px);
+    box-shadow: var(--shadow);
+    border-color: var(--madeira-primary);
+}
+
+.platform-icon {
+    width: 70px; height: 70px;
+    background: var(--tech-light);
+    border-radius: 15px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 30px; color: var(--madeira-primary);
+    margin-bottom: 25px;
+}
+
+.platform-card h3 { font-weight: 700; margin-bottom: 15px; }
+.platform-card p { color: #6b7280; font-size: 0.95rem; line-height: 1.6; }
+
+.btn-arrow {
+    margin-top: 20px;
+    color: var(--madeira-primary);
+    font-weight: 700;
+    text-decoration: none;
+    display: inline-flex; align-items: center;
+}
+.btn-arrow i { margin-left: 5px; transition: 0.3s; }
+.platform-card:hover .btn-arrow i { transform: translateX(5px); }
+
+/* --- RODAPÉ --- */
+footer { background: var(--tech-dark); color: white; padding: 60px 0; margin-top: 80px; }

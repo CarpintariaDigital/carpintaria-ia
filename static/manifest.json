@@ -1,0 +1,48 @@
+{
+    "name": "Carpintaria OS 2026",
+    "short_name": "Carpintaria",
+    "description": "Sistema Operacional Digital Soberano - Escritório & Ecossistema",
+    "start_url": "/",
+    "display": "standalone",
+    "background_color": "#0f172a",
+    "theme_color": "#d4af37",
+    "orientation": "portrait-primary",
+    "icons": [
+        {
+            "src": "/static/images/logo-192.png",
+            "sizes": "192x192",
+            "type": "image/png",
+            "purpose": "any maskable"
+        }
+    ],
+    "shortcuts": [
+        {
+            "name": "Loja (Dumbanengue)",
+            "url": "/store",
+            "icons": [
+                {
+                    "src": "/static/images/logo-192.png",
+                    "sizes": "192x192"
+                }
+            ]
+        },
+        {
+            "name": "Escritório",
+            "url": "/office",
+            "icons": [
+                {
+                    "src": "/static/images/logo-192.png",
+                    "sizes": "192x192"
+                }
+            ]
+        }
+    ],
+    "screenshots": [
+        {
+            "src": "/static/images/logo-192.png",
+            "sizes": "192x192",
+            "type": "image/png",
+            "form_factor": "wide"
+        }
+    ]
+}

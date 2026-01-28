@@ -1,0 +1,121 @@
+/* CARPINTARIA DIGITAL - ELITE INTERFACE v6.0 (LIMPO) */
+@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;500;800&family=Playfair+Display:wght@900&display=swap');
+@import url('https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css');
+
+:root {
+    --bg-main: #0f172a;          /* Azul Noite */
+    --accent-gold: #fbbf24;      /* Ouro */
+    --accent-cyan: #22d3ee;      /* Ciano */
+    --glass-bg: rgba(30, 41, 59, 0.7);
+    --glass-border: rgba(255, 255, 255, 0.1);
+    --text-pure: #ffffff;
+    --text-muted: #94a3b8;
+    --grad-glow: linear-gradient(135deg, #fbbf24 0%, #d97706 100%);
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+    background: var(--bg-main);
+    /* Fundo com brilhos subtis */
+    background-image:
+        radial-gradient(at 0% 0%, rgba(34, 211, 238, 0.15) 0px, transparent 50%),
+        radial-gradient(at 100% 100%, rgba(251, 191, 36, 0.1) 0px, transparent 50%);
+    color: var(--text-pure);
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    min-height: 100vh;
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+/* --- LOGO CENTRAL --- */
+.logo-area {
+    text-align: center;
+    margin-bottom: 2rem;
+    margin-top: 2rem;
+}
+.logo-title {
+    font-family: 'Playfair Display', serif;
+    font-size: 2.5rem;
+    background: var(--grad-glow);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    margin-bottom: 0.5rem;
+}
+.logo-sub {
+    font-family: 'Fira Code', monospace;
+    color: var(--accent-cyan);
+    letter-spacing: 2px;
+    font-size: 0.9rem;
+    text-transform: uppercase;
+}
+
+/* --- GRELHA DE APPS (MENU) --- */
+.main-container {
+    width: 100%;
+    max-width: 800px; /* Mais largo para o PC */
+    z-index: 10;
+}
+
+.app-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); /* Inteligente */
+    gap: 1.5rem;
+}
+
+/* CARTÕES DE LUXO (Glassmorphism) */
+.app-card {
+    background: var(--glass-bg);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border: 1px solid var(--glass-border);
+    border-radius: 20px;
+    padding: 2rem 1.5rem;
+    text-align: center;
+    text-decoration: none;
+    color: var(--text-pure);
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    position: relative;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+}
+
+.app-card:hover {
+    transform: translateY(-5px);
+    border-color: var(--accent-gold);
+    box-shadow: 0 10px 30px rgba(251, 191, 36, 0.15);
+}
+
+.icon-box {
+    font-size: 2.5rem;
+    margin-bottom: 1rem;
+    color: var(--text-muted);
+    transition: 0.3s;
+}
+
+.app-card:hover .icon-box { color: var(--text-pure); transform: scale(1.1); }
+
+.app-name {
+    font-weight: 700;
+    font-size: 1rem;
+    letter-spacing: 0.5px;
+}
+
+/* Cores Específicas ao passar o rato */
+.card-office:hover .icon-box { color: var(--accent-gold); }
+.card-health:hover .icon-box { color: #f43f5e; }
+.card-events:hover .icon-box { color: var(--accent-cyan); }
+
+/* --- RODAPÉ --- */
+footer {
+    margin-top: 4rem;
+    text-align: center;
+    color: rgba(255,255,255,0.3);
+    font-size: 0.8rem;
+    font-family: 'Fira Code', monospace;
+}

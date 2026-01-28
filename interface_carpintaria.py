@@ -76,34 +76,154 @@ st.set_page_config(page_title="Carpintaria OS Pro", page_icon="🪚", layout="wi
 
 st.markdown("""
 <style>
-    /* FUNDO E FONTE */
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap');
+
+    /* 1. FUNDO E CONFIGURAÇÕES GERAIS */
     .stApp {
-        background: radial-gradient(circle at 10% 20%, rgb(242, 246, 252) 0%, rgb(227, 235, 245) 90%);
+        background: linear-gradient(135deg, #e0e7ff 0%, #f8fafc 100%);
         font-family: 'Inter', sans-serif;
     }
     header[data-testid="stHeader"] {background: transparent;}
+    
+    #MainMenu {visibility: hidden;}
+    footer {visibility: hidden;}
 
-    /* CARDS KANBAN */
-    .kanban-card {
-        background: white; padding: 15px; border-radius: 8px;
-        box-shadow: 0 2px 5px rgba(0,0,0,0.05); margin-bottom: 10px;
-        border-left: 4px solid #0ea5e9; transition: transform 0.2s; cursor: pointer;
+    /* 2. GLASSMORPHISM AVANÇADO */
+    .stContainer, .stAlert, .stExpander, [data-testid="stVerticalBlock"] > div:has(div.stAlert), .kanban-card {
+        background: rgba(255, 255, 255, 0.4) !important;
+        border-radius: 24px !important;
+        box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.07) !important;
+        backdrop-filter: blur(12px) !important;
+        -webkit-backdrop-filter: blur(12px) !important;
+        border: 1px solid rgba(255, 255, 255, 0.18) !important;
+        padding: 20px !important;
+        margin-bottom: 20px !important;
+        transition: transform 0.3s ease;
     }
-    .kanban-card:hover { transform: translateY(-3px); box-shadow: 0 5px 15px rgba(0,0,0,0.1); }
+    
+    .kanban-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 12px 40px 0 rgba(31, 38, 135, 0.12) !important;
+    }
 
-    /* SIDEBAR */
-    section[data-testid="stSidebar"] { background-color: #0f172a; }
-    section[data-testid="stSidebar"] h1, h2, h3, p, span { color: #f1f5f9 !important; }
+    /* 3. BOTÕES PROFISSIONAIS */
+    .stButton>button {
+        border-radius: 12px !important;
+        font-weight: 600 !important;
+        padding: 0.6rem 1.5rem !important;
+        transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) !important;
+        border: none !important;
+        background: linear-gradient(135deg, #6366f1 0%, #4f46e5 100%) !important;
+        color: white !important;
+        box-shadow: 0 4px 15px rgba(79, 70, 229, 0.3) !important;
+    }
     
-    /* BOTÕES */
-    .stButton>button { border-radius: 8px; font-weight: 600; }
+    .stButton>button:hover {
+        transform: scale(1.02) translateY(-2px) !important;
+        box-shadow: 0 8px 25px rgba(79, 70, 229, 0.4) !important;
+        background: linear-gradient(135deg, #4f46e5 0%, #4338ca 100%) !important;
+    }
+
+    /* 4. SIDEBAR GLASS */
+    section[data-testid="stSidebar"] {
+        background: rgba(255, 255, 255, 0.4) !important;
+        backdrop-filter: blur(20px) !important;
+        -webkit-backdrop-filter: blur(20px) !important;
+        border-right: 1px solid rgba(255, 255, 255, 0.2) !important;
+    }
     
-    /* LOGO BOX */
+    /* 5. MENU FLUTUANTE COM ANIMAÇÃO */
+    .floating-menu {
+        position: fixed;
+        top: 50%;
+        left: 20px;
+        transform: translateY(-50%);
+        z-index: 1000;
+        display: flex;
+        flex-direction: column;
+        gap: 15px;
+        padding: 15px;
+        background: rgba(255, 255, 255, 0.3);
+        border-radius: 30px;
+        box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.1);
+        backdrop-filter: blur(15px);
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        animation: floatSidebar 3s ease-in-out infinite;
+    }
+
+    @keyframes floatSidebar {
+        0%, 100% { transform: translateY(-50%) translateX(0px); }
+        50% { transform: translateY(-52%) translateX(5px); }
+    }
+
+    .floating-icon {
+        width: 45px;
+        height: 45px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 50%;
+        cursor: pointer;
+        transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        font-size: 1.2rem;
+        background: rgba(255, 255, 255, 0.8);
+        box-shadow: 0 4px 10px rgba(0,0,0,0.05);
+        position: relative;
+    }
+
+    .floating-icon:hover {
+        transform: scale(1.2) rotate(10deg);
+        background: #6366f1;
+        color: white;
+        box-shadow: 0 8px 20px rgba(99, 102, 241, 0.4);
+    }
+
+    .floating-icon::after {
+        content: attr(data-tooltip);
+        position: absolute;
+        left: 60px;
+        background: #1e293b;
+        color: white;
+        padding: 5px 12px;
+        border-radius: 8px;
+        font-size: 0.75rem;
+        white-space: nowrap;
+        opacity: 0;
+        visibility: hidden;
+        transition: all 0.3s ease;
+    }
+
+    .floating-icon:hover::after {
+        opacity: 1;
+        visibility: visible;
+        left: 55px;
+    }
+    
+    /* 6. LOGO BOX */
     .logo-box {
-        background: white; border-radius: 12px; padding: 10px;
-        width: 80px; height: 80px; margin: 0 auto 15px auto;
-        display: flex; align-items: center; justify-content: center;
-        box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+        background: white;
+        border-radius: 20px;
+        padding: 12px;
+        width: 90px;
+        height: 90px;
+        margin: 0 auto 20px auto;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        box-shadow: 0 10px 25px rgba(0,0,0,0.05);
+        border: 1px solid #f1f5f9;
+    }
+    
+    /* 7. AJUSTE DE LAYOUT */
+    .block-container {
+        padding-left: 100px !important;
+        padding-right: 50px !important;
+    }
+
+    /* Estilização de métricas */
+    [data-testid="stMetricValue"] {
+        font-weight: 700 !important;
+        color: #1e293b !important;
     }
 </style>
 """, unsafe_allow_html=True)
@@ -112,6 +232,26 @@ st.markdown("""
 LOGO_URL = "CarpintariaDigitalLogo.png"
 if not os.path.exists(LOGO_URL):
     LOGO_URL = "https://cdn-icons-png.flaticon.com/512/2040/2040946.png"
+
+# --- MENU FLUTUANTE GLOBAL ---
+def render_floating_menu():
+    menu_html = """
+    <div class="floating-menu">
+        <div class="floating-icon" data-tooltip="ERP / Dashboard">📊</div>
+        <div class="floating-icon" data-tooltip="Inteligência Artificial">🧠</div>
+        <div class="floating-icon" data-tooltip="Saúde / Bem-estar">🏥</div>
+        <div class="floating-icon" data-tooltip="Vendas / CRM">📈</div>
+        <div class="floating-icon" data-tooltip="Marketing">📱</div>
+        <div class="floating-icon" data-tooltip="Stock / Estoque">📦</div>
+        <div class="floating-icon" data-tooltip="CRM">🤝</div>
+        <div class="floating-icon" data-tooltip="Consultoria">💼</div>
+        <div class="floating-icon" data-tooltip="Academia / Treino">🎓</div>
+        <div class="floating-icon" data-tooltip="Dev / Código">💻</div>
+    </div>
+    """
+    st.markdown(menu_html, unsafe_allow_html=True)
+
+render_floating_menu()
 
 # ==========================================
 # 🧠 FERRAMENTAS IA (CORRIGIDO PARA SMOLAGENTS)

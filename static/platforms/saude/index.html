@@ -1,0 +1,672 @@
+<!DOCTYPE html>
+<html lang="pt">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CD Saúde | Rede Médica</title>
+
+    <link
+        href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&family=Inter:wght@300;400;500;600&display=swap"
+        rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+
+    <link rel="manifest" href="manifest.json">
+
+    <style>
+        /* --- DESIGN SYSTEM (Saúde Elite) --- */
+        :root {
+            --bg-body: #F0F9FF;
+            /* Azul muito pálido (Higiene) */
+            --bg-panel: #FFFFFF;
+            --brand-dark: #0f172a;
+            --brand-gold: #D4A373;
+            --health-blue: #0ea5e9;
+            /* Azul Médico */
+            --health-green: #10b981;
+            /* Verde Farmácia */
+            --text-main: #334155;
+            --text-muted: #64748b;
+            --shadow: 0 10px 30px -5px rgba(14, 165, 233, 0.1);
+            --border-radius: 16px;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background-color: var(--bg-body);
+            color: var(--text-main);
+            font-family: 'Inter', sans-serif;
+            overflow-x: hidden;
+        }
+
+        /* --- HEADER --- */
+        header {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            padding: 1rem 2rem;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .back-link {
+            text-decoration: none;
+            color: var(--text-main);
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            transition: 0.3s;
+        }
+
+        .back-link:hover {
+            color: var(--health-blue);
+            transform: translateX(-5px);
+        }
+
+        .logo {
+            font-family: 'Playfair Display';
+            font-weight: 900;
+            font-size: 1.5rem;
+            color: var(--brand-dark);
+        }
+
+        /* --- HERO & PESQUISA --- */
+        .hero {
+            text-align: center;
+            padding: 3rem 2rem 2rem 2rem;
+            background: radial-gradient(circle at center, #fff 0%, #e0f2fe 100%);
+        }
+
+        .hero h1 {
+            font-family: 'Playfair Display';
+            font-size: 2.8rem;
+            color: var(--brand-dark);
+            margin-bottom: 0.5rem;
+        }
+
+        .hero p {
+            color: var(--text-muted);
+            margin-bottom: 2rem;
+        }
+
+        .search-box {
+            position: relative;
+            max-width: 500px;
+            margin: 0 auto;
+        }
+
+        .search-input {
+            width: 100%;
+            padding: 16px 20px 16px 50px;
+            border: 1px solid #bae6fd;
+            border-radius: 50px;
+            font-size: 1rem;
+            outline: none;
+            transition: 0.3s;
+            box-shadow: 0 4px 20px rgba(14, 165, 233, 0.1);
+        }
+
+        .search-input:focus {
+            border-color: var(--health-blue);
+            box-shadow: 0 4px 25px rgba(14, 165, 233, 0.2);
+        }
+
+        .search-icon {
+            position: absolute;
+            left: 20px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--health-blue);
+        }
+
+        /* --- FILTROS --- */
+        .filters {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            margin: 1.5rem 0 3rem 0;
+            flex-wrap: wrap;
+            padding: 0 1rem;
+        }
+
+        .filter-btn {
+            padding: 8px 20px;
+            border-radius: 30px;
+            border: 1px solid #e2e8f0;
+            background: white;
+            color: var(--text-muted);
+            cursor: pointer;
+            font-weight: 500;
+            transition: 0.3s;
+        }
+
+        .filter-btn:hover,
+        .filter-btn.active {
+            background: var(--health-blue);
+            color: white;
+            border-color: var(--health-blue);
+        }
+
+        /* --- GRID DE SAÚDE --- */
+        .health-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+            gap: 2rem;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 2rem 6rem 2rem;
+        }
+
+        /* --- CARTÃO MÉDICO --- */
+        .med-card {
+            background: white;
+            border-radius: var(--border-radius);
+            border: 1px solid rgba(0, 0, 0, 0.03);
+            box-shadow: var(--shadow);
+            overflow: hidden;
+            transition: 0.3s;
+            position: relative;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .med-card:hover {
+            transform: translateY(-5px);
+            border-color: var(--health-blue);
+        }
+
+        .card-map-placeholder {
+            height: 120px;
+            background: #f1f5f9;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #94a3b8;
+            font-size: 0.8rem;
+            position: relative;
+        }
+
+        .status-badge {
+            position: absolute;
+            top: 15px;
+            right: 15px;
+            padding: 4px 10px;
+            border-radius: 20px;
+            font-size: 0.7rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+        }
+
+        .status-open {
+            background: #dcfce7;
+            color: #15803d;
+        }
+
+        .status-closed {
+            background: #fee2e2;
+            color: #b91c1c;
+        }
+
+        .card-body {
+            padding: 1.5rem;
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .med-type {
+            font-size: 0.7rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: var(--health-blue);
+            margin-bottom: 5px;
+            font-weight: 700;
+        }
+
+        .med-title {
+            font-family: 'Playfair Display';
+            font-size: 1.3rem;
+            color: var(--brand-dark);
+            margin-bottom: 5px;
+        }
+
+        .med-loc {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            margin-bottom: 1rem;
+        }
+
+        .med-services {
+            display: flex;
+            gap: 5px;
+            flex-wrap: wrap;
+            margin-bottom: 1.5rem;
+        }
+
+        .srv-tag {
+            font-size: 0.7rem;
+            padding: 3px 8px;
+            background: #f0f9ff;
+            color: var(--health-blue);
+            border-radius: 4px;
+        }
+
+        .card-actions {
+            margin-top: auto;
+            display: flex;
+            gap: 10px;
+        }
+
+        .btn-call {
+            flex: 1;
+            padding: 10px;
+            border-radius: 8px;
+            text-align: center;
+            text-decoration: none;
+            background: #f8fafc;
+            color: var(--brand-dark);
+            border: 1px solid #e2e8f0;
+            font-weight: 600;
+            font-size: 0.9rem;
+            transition: 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+
+        .btn-call:hover {
+            background: #e2e8f0;
+        }
+
+        .btn-primary {
+            flex: 1;
+            padding: 10px;
+            border-radius: 8px;
+            text-align: center;
+            text-decoration: none;
+            background: var(--health-blue);
+            color: white;
+            border: none;
+            font-weight: 600;
+            font-size: 0.9rem;
+            transition: 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+
+        .btn-primary:hover {
+            background: #0284c7;
+            box-shadow: 0 4px 10px rgba(14, 165, 233, 0.3);
+        }
+
+        /* --- BOTÃO SOS & MODAL (FIXED) --- */
+        .sos-btn {
+            position: fixed;
+            bottom: 30px;
+            left: 30px;
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            background: #ef4444;
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            box-shadow: 0 10px 25px rgba(239, 68, 68, 0.4);
+            cursor: pointer;
+            z-index: 100;
+            animation: pulse 2s infinite;
+            border: 2px solid white;
+        }
+
+        @keyframes pulse {
+            0% {
+                box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.7);
+            }
+
+            70% {
+                box-shadow: 0 0 0 15px rgba(239, 68, 68, 0);
+            }
+
+            100% {
+                box-shadow: 0 0 0 0 rgba(239, 68, 68, 0);
+            }
+        }
+
+        /* Modal Overlay */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(185, 28, 28, 0.3);
+            /* Fundo avermelhado */
+            backdrop-filter: blur(5px);
+            z-index: 2000;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .modal-overlay.open {
+            display: flex;
+            opacity: 1;
+        }
+
+        .modal-box {
+            background: white;
+            width: 90%;
+            max-width: 400px;
+            padding: 2rem;
+            border-radius: 20px;
+            text-align: center;
+            box-shadow: 0 25px 50px -12px rgba(220, 38, 38, 0.25);
+            transform: scale(0.9);
+            transition: 0.3s;
+            border-top: 5px solid #ef4444;
+        }
+
+        .modal-overlay.open .modal-box {
+            transform: scale(1);
+        }
+
+        .modal-icon-pulse {
+            font-size: 3rem;
+            color: #ef4444;
+            margin-bottom: 1rem;
+            animation: pulse-red 1.5s infinite;
+        }
+
+        .modal-actions {
+            display: flex;
+            gap: 10px;
+            margin-top: 2rem;
+        }
+
+        .btn-cancel {
+            flex: 1;
+            padding: 12px;
+            border: 1px solid #e2e8f0;
+            background: white;
+            color: var(--text-muted);
+            border-radius: 10px;
+            cursor: pointer;
+            font-weight: 600;
+        }
+
+        .btn-sos-confirm {
+            flex: 1;
+            padding: 12px;
+            border: none;
+            background: #ef4444;
+            color: white;
+            border-radius: 10px;
+            cursor: pointer;
+            font-weight: 700;
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+
+        .btn-sos-confirm:hover {
+            background: #dc2626;
+        }
+
+        @keyframes pulse-red {
+            0% {
+                transform: scale(1);
+                opacity: 1;
+            }
+
+            50% {
+                transform: scale(1.1);
+                opacity: 0.8;
+            }
+
+            100% {
+                transform: scale(1);
+                opacity: 1;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <header>
+        <a href="/store" class="back-link">
+            <i class="fa-solid fa-arrow-left"></i> Voltar
+        </a>
+        <div class="logo">CD Saúde<span style="color: var(--health-green);">+</span></div>
+        <div style="width: 80px;"></div>
+    </header>
+
+    <section class="hero">
+        <h1>Saúde na sua Mão</h1>
+        <p>Encontre farmácias de serviço, clínicas e especialistas perto de si.</p>
+
+        <div class="search-box">
+            <i class="fa-solid fa-search search-icon"></i>
+            <input type="text" id="searchInput" class="search-input" placeholder="Buscar por nome, bairro ou serviço..."
+                onkeyup="filtrar()">
+        </div>
+    </section>
+
+    <div class="filters">
+        <button class="filter-btn active" onclick="filtrarCat('todos')">Todos</button>
+        <button class="filter-btn" onclick="filtrarCat('farmacia')">💊 Farmácias</button>
+        <button class="filter-btn" onclick="filtrarCat('clinica')">🩺 Clínicas</button>
+        <button class="filter-btn" onclick="filtrarCat('24h')">🌙 24 Horas</button>
+    </div>
+
+    <div class="health-grid">
+
+        <div class="med-card cat-farmacia cat-24h" data-name="Farmácia Central">
+            <div class="card-map-placeholder" style="background: #ecfdf5;">
+                <i class="fa-solid fa-map-location-dot" style="font-size: 2rem; color: var(--health-green);"></i>
+                <span class="status-badge status-open">Aberto Agora</span>
+            </div>
+            <div class="card-body">
+                <div class="med-type">Farmácia de Serviço</div>
+                <div class="med-title">Farmácia Central</div>
+                <div class="med-loc"><i class="fa-solid fa-location-dot"></i> Av. 24 de Julho, Maputo</div>
+
+                <div class="med-services">
+                    <span class="srv-tag">Medicamentos</span>
+                    <span class="srv-tag">Medição Tensão</span>
+                    <span class="srv-tag">Testes Rápidos</span>
+                </div>
+
+                <div class="card-actions">
+                    <a href="tel:+258840000000" class="btn-call"><i class="fa-solid fa-phone"></i> Ligar</a>
+                    <a href="https://wa.me/258840000000?text=Tenho uma receita médica para aviar."
+                        class="btn-primary"><i class="fa-brands fa-whatsapp"></i> Receita</a>
+                </div>
+            </div>
+        </div>
+
+        <div class="med-card cat-clinica" data-name="Clínica Vida">
+            <div class="card-map-placeholder">
+                <i class="fa-solid fa-hospital" style="font-size: 2rem; color: var(--health-blue);"></i>
+                <span class="status-badge status-open">Fecha às 18h</span>
+            </div>
+            <div class="card-body">
+                <div class="med-type">Clínica Geral</div>
+                <div class="med-title">Clínica Vida</div>
+                <div class="med-loc"><i class="fa-solid fa-location-dot"></i> Sommerschield, Maputo</div>
+
+                <div class="med-services">
+                    <span class="srv-tag">Pediatria</span>
+                    <span class="srv-tag">Ginecologia</span>
+                    <span class="srv-tag">Raio-X</span>
+                </div>
+
+                <div class="card-actions">
+                    <a href="tel:+258840000000" class="btn-call"><i class="fa-solid fa-calendar"></i> Agendar</a>
+                    <a href="https://maps.google.com" target="_blank" class="btn-primary"
+                        style="background: var(--brand-dark);"><i class="fa-solid fa-diamond-turn-right"></i> Ir</a>
+                </div>
+            </div>
+        </div>
+
+        <div class="med-card cat-farmacia" data-name="Farmácia Esperança">
+            <div class="card-map-placeholder">
+                <i class="fa-solid fa-pills" style="font-size: 2rem; color: #94a3b8;"></i>
+                <span class="status-badge status-closed">Fechado</span>
+            </div>
+            <div class="card-body">
+                <div class="med-type">Farmácia</div>
+                <div class="med-title">Farmácia Esperança</div>
+                <div class="med-loc"><i class="fa-solid fa-location-dot"></i> Matola Rio</div>
+
+                <div class="med-services">
+                    <span class="srv-tag">Genéricos</span>
+                    <span class="srv-tag">Cosmética</span>
+                </div>
+
+                <div class="card-actions">
+                    <a href="tel:+258840000000" class="btn-call"><i class="fa-solid fa-phone"></i> Ligar</a>
+                    <button class="btn-primary" style="background: #cbd5e1; cursor: not-allowed;">Indisponível</button>
+                </div>
+            </div>
+        </div>
+
+        <div class="med-card cat-clinica" data-name="Sorriso Dental">
+            <div class="card-map-placeholder" style="background: #e0f2fe;">
+                <i class="fa-solid fa-tooth" style="font-size: 2rem; color: var(--health-blue);"></i>
+                <span class="status-badge status-open">Por Marcação</span>
+            </div>
+            <div class="card-body">
+                <div class="med-type">Estomatologia</div>
+                <div class="med-title">Sorriso Dental</div>
+                <div class="med-loc"><i class="fa-solid fa-location-dot"></i> Polana Cimento</div>
+
+                <div class="med-services">
+                    <span class="srv-tag">Ortodontia</span>
+                    <span class="srv-tag">Implantes</span>
+                </div>
+
+                <div class="card-actions">
+                    <a href="https://wa.me/258840000000?text=Quero marcar uma consulta dentária." class="btn-primary"><i
+                            class="fa-brands fa-whatsapp"></i> Marcar</a>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <div class="sos-btn" onclick="openSOS()" title="Emergência Médica">
+        <i class="fa-solid fa-kit-medical"></i>
+    </div>
+
+    <div id="modalSOS" class="modal-overlay">
+        <div class="modal-box">
+            <div class="modal-icon-pulse">
+                <i class="fa-solid fa-truck-medical"></i>
+            </div>
+            <h2 style="color: #991b1b; font-family: 'Playfair Display'; margin-bottom: 0.5rem;">Emergência?</h2>
+            <p style="color: #64748b; font-size: 0.9rem;">Esta ação vai ligar imediatamente para os serviços de urgência
+                nacional.</p>
+
+            <div class="modal-actions">
+                <button class="btn-cancel" onclick="closeSOS()">Cancelar</button>
+                <a href="tel:112" class="btn-sos-confirm">
+                    <i class="fa-solid fa-phone-volume"></i> Ligar 112
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <footer style="text-align: center; padding: 2rem; color: #94a3b8; font-size: 0.8rem; border-top: var(--border);">
+        <p>© 2026 CD Saúde • Carpintaria Digital</p>
+    </footer>
+
+    <script>
+        // --- FUNÇÕES DO SOS ---
+        function openSOS() {
+            const modal = document.getElementById('modalSOS');
+            modal.style.display = 'flex'; // Torna visível para o layout
+            setTimeout(() => modal.classList.add('open'), 10); // Ativa animação
+        }
+
+        function closeSOS() {
+            const modal = document.getElementById('modalSOS');
+            modal.classList.remove('open'); // Remove animação
+            setTimeout(() => modal.style.display = 'none', 300); // Esconde depois
+        }
+
+        // Fechar se clicar fora
+        document.getElementById('modalSOS').addEventListener('click', function (e) {
+            if (e.target === this) {
+                closeSOS();
+            }
+        });
+
+        // --- FILTROS DE PESQUISA ---
+        function filtrarCat(cat) {
+            document.querySelectorAll('.filter-btn').forEach(btn => btn.classList.remove('active'));
+            event.target.classList.add('active');
+
+            const cards = document.querySelectorAll('.med-card');
+            cards.forEach(card => {
+                if (cat === 'todos') {
+                    card.style.display = 'flex';
+                } else if (card.classList.contains('cat-' + cat)) {
+                    card.style.display = 'flex';
+                } else {
+                    card.style.display = 'none';
+                }
+            });
+        }
+
+        function filtrar() {
+            const input = document.getElementById('searchInput').value.toLowerCase();
+            const cards = document.querySelectorAll('.med-card');
+
+            cards.forEach(card => {
+                const name = card.getAttribute('data-name').toLowerCase();
+                const type = card.querySelector('.med-type').innerText.toLowerCase();
+                const loc = card.querySelector('.med-loc').innerText.toLowerCase();
+
+                if (name.includes(input) || type.includes(input) || loc.includes(input)) {
+                    card.style.display = 'flex';
+                } else {
+                    card.style.display = 'none';
+                }
+            });
+        }
+
+        // Registo PWA
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('/sw.js');
+            });
+        }
+    </script>
+
+</body>
+
+</html>

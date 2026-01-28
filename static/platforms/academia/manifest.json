@@ -1,0 +1,15 @@
+{
+    "name": "Academia Carpintaria",
+    "short_name": "Academia",
+    "start_url": "/platforms/academia/index.html",
+    "display": "standalone",
+    "background_color": "#f3f4f6",
+    "theme_color": "#3b82f6",
+    "icons": [
+        {
+            "src": "/assets/images/logo_academia.png",
+            "sizes": "192x192",
+            "type": "image/png"
+        }
+    ]
+}

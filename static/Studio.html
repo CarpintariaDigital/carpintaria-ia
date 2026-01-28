@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Studio - Monaco Editor</title>
+    <link rel="stylesheet" href="/assets/css/style.css">
+    <style>
+        body { margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #1e1e1e; color: white; display: flex; flex-direction: column; height: 100vh; }
+        header { background: #333; padding: 10px 20px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 2px 5px rgba(0,0,0,0.5); }
+        #container { flex: 1; border: 1px solid #444; }
+        .toolbar { padding: 5px; background: #252526; display: flex; gap: 10px; }
+        button { background: #007acc; color: white; border: none; padding: 5px 15px; cursor: pointer; border-radius: 3px; }
+        button:hover { background: #0062a3; }
+        #file-list { width: 250px; background: #252526; border-right: 1px solid #444; overflow-y: auto; display: none; }
+        .main-content { display: flex; flex: 1; }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>Carpintaria Studio</h1>
+        <div>
+            <button onclick="location.href='/'">Voltar</button>
+        </div>
+    </header>
+    <div class="toolbar">
+        <button onclick="toggleFiles()">Ficheiros</button>
+        <button onclick="saveFile()">Guardar</button>
+    </div>
+    <div class="main-content">
+        <div id="file-list">
+            <ul id="files"></ul>
+        </div>
+        <div id="container"></div>
+    </div>
+
+    <!-- Monaco Editor from CDN -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.44.0/min/vs/loader.min.js"></script>
+    <script>
+        require.config({ paths: { 'vs': 'https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.44.0/min/vs' }});
+        var editor;
+        require(['vs/editor/editor.main'], function() {
+            editor = monaco.editor.create(document.getElementById('container'), {
+                value: [
+                    '// Bem-vindo ao Carpintaria Studio',
+                    'function hello() {',
+                    '\tconsole.log("Hello world!");',
+                    '}'
+                ].join('\n'),
+                language: 'javascript',
+                theme: 'vs-dark',
+                automaticLayout: true
+            });
+        });
+
+        function toggleFiles() {
+            const list = document.getElementById('file-list');
+            list.style.display = list.style.display === 'none' ? 'block' : 'none';
+            if (list.style.display === 'block') { loadFiles(); }
+        }
+
+        async function loadFiles() {
+            const res = await fetch('/api/files/list');
+            const data = await res.json();
+            const ul = document.getElementById('files');
+            ul.innerHTML = '';
+            data.files.forEach(f => {
+                const li = document.createElement('li');
+                li.textContent = (f.isDir ? '📁 ' : '📄 ') + f.name;
+                li.style.padding = '5px';
+                li.style.cursor = 'pointer';
+                li.onclick = () => alert('A abrir ' + f.name);
+                ul.appendChild(li);
+            });
+        }
+
+        function saveFile() {
+            alert('Ficheiro guardado localmente (simulação)');
+        }
+    </script>
+</body>
+</html>

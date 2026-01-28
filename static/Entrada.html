@@ -1,0 +1,711 @@
+<!DOCTYPE html>
+<html lang="pt">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Carpintaria Digital | Hub Central</title>
+
+    <link
+        href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&family=Inter:wght@300;400;600&display=swap"
+        rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="manifest" href="/static/manifest.json">
+    <meta name="theme-color" content="#d4af37">
+    <link rel="apple-touch-icon" href="/static/images/logo-192.png">
+
+    <style>
+        :root {
+            /* PALETA LIGHT (Limpa e Profissional) */
+            --bg-light: #F9FAFB;
+            --bg-paper: #FFFFFF;
+
+            /* CORES DA MARCA */
+            --navy-brand: #0f172a;
+            /* Azul Profundo */
+            --gold: #D4A373;
+            /* Ouro Madeira */
+            --cyan: #0ea5e9;
+            /* Azul Tech */
+
+            --text-main: #1e293b;
+            --text-muted: #64748b;
+
+            --shadow-card: 0 20px 40px -5px rgba(0, 0, 0, 0.05);
+            --shadow-hover: 0 25px 50px -12px rgba(212, 163, 115, 0.25);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background: radial-gradient(circle at 50% 50%, #fff 0%, #f1f5f9 100%);
+            color: var(--text-main);
+            font-family: 'Inter', sans-serif;
+            min-height: 100vh;
+            /* Alterado para min-height para permitir scroll no mobile */
+            overflow-x: hidden;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+        }
+
+        /* --- FUNDO FLUTUANTE (CORRIGIDO PARA FIXO) --- */
+        .floating-background {
+            position: fixed;
+            /* Mudado de absolute para fixed para não cortar no scroll */
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -1;
+            /* Garante que fica atrás de tudo */
+            pointer-events: none;
+            overflow: hidden;
+        }
+
+        .float-icon {
+            position: absolute;
+            font-size: 2.5rem;
+            opacity: 0.12;
+            animation: floatAnim 10s ease-in-out infinite;
+        }
+
+        /* Cores alternadas */
+        .icon-gold {
+            color: var(--gold);
+        }
+
+        .icon-navy {
+            color: var(--navy-brand);
+        }
+
+        .icon-cyan {
+            color: var(--cyan);
+        }
+
+        /* Posições */
+        .i-erp {
+            top: 5%;
+            left: 5%;
+            animation-duration: 45s;
+        }
+
+        .i-crm {
+            top: 12%;
+            right: 8%;
+            animation-duration: 50s;
+        }
+
+        .i-ia {
+            top: 50%;
+            left: 50%;
+            animation-duration: 60s;
+            font-size: 6rem;
+            opacity: 0.05;
+            transform: translate(-50%, -50%);
+        }
+
+        .i-cloud {
+            top: 8%;
+            left: 45%;
+            animation-duration: 55s;
+        }
+
+        .i-dev {
+            bottom: 10%;
+            left: 5%;
+            animation-duration: 48s;
+        }
+
+        .i-pharma {
+            top: 30%;
+            left: 15%;
+            animation-duration: 52s;
+            font-size: 2rem;
+        }
+
+        .i-doctor {
+            top: 25%;
+            right: 25%;
+            animation-duration: 49s;
+            font-size: 2.2rem;
+        }
+
+        .i-pulse {
+            bottom: 25%;
+            right: 5%;
+            animation-duration: 53s;
+        }
+
+        .i-book {
+            top: 60%;
+            left: 10%;
+            animation-duration: 58s;
+        }
+
+        .i-grad {
+            bottom: 5%;
+            right: 40%;
+            animation-duration: 62s;
+        }
+
+        .i-growth {
+            top: 40%;
+            right: 5%;
+            animation-duration: 47s;
+        }
+
+        .i-trend {
+            bottom: 40%;
+            left: 8%;
+            animation-duration: 51s;
+        }
+
+        .i-mkt {
+            top: 15%;
+            left: 25%;
+            animation-duration: 56s;
+        }
+
+        .i-seo {
+            bottom: 15%;
+            left: 35%;
+            animation-duration: 54s;
+        }
+
+        @keyframes floatAnim {
+            0% {
+                transform: translate(0, 0) rotate(0deg);
+            }
+
+            33% {
+                transform: translate(30px, -40px) rotate(10deg);
+            }
+
+            66% {
+                transform: translate(-20px, 30px) rotate(-5deg);
+            }
+
+            100% {
+                transform: translate(0, 0) rotate(0deg);
+            }
+        }
+
+        /* --- LAYOUT PRINCIPAL --- */
+        .portal-container {
+            z-index: 10;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 4rem;
+            width: 100%;
+            max-width: 1200px;
+            padding: 2rem;
+            position: relative;
+        }
+
+        .connector-line {
+            position: absolute;
+            top: 50%;
+            left: 15%;
+            width: 70%;
+            height: 2px;
+            background: linear-gradient(90deg, transparent, var(--gold), transparent);
+            z-index: -1;
+            opacity: 0.4;
+        }
+
+        .logo-center {
+            width: 220px;
+            height: 220px;
+            background: var(--navy-brand);
+            border: 4px solid #fff;
+            border-radius: 50%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 20px 60px rgba(15, 23, 42, 0.3);
+            transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+            z-index: 20;
+        }
+
+        .logo-center:hover {
+            transform: scale(1.05);
+            box-shadow: 0 30px 80px rgba(15, 23, 42, 0.4);
+        }
+
+        .logo-img {
+            width: 120px;
+            height: auto;
+        }
+
+        /* --- PORTÕES (CARTÕES) --- */
+        .portal-gate {
+            width: 280px;
+            height: 320px;
+            background: var(--bg-paper);
+            border: 1px solid rgba(0, 0, 0, 0.05);
+            border-radius: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            text-decoration: none;
+            transition: all 0.4s ease;
+            position: relative;
+            cursor: pointer;
+            box-shadow: var(--shadow-card);
+        }
+
+        .gate-left:hover {
+            transform: translateY(-8px);
+            border-color: var(--cyan);
+            box-shadow: var(--shadow-hover);
+        }
+
+        .gate-right:hover {
+            transform: translateY(-8px);
+            border-color: var(--gold);
+            box-shadow: var(--shadow-hover);
+        }
+
+        .gate-icon {
+            font-size: 3rem;
+            margin-bottom: 1.5rem;
+            transition: 0.3s;
+        }
+
+        .gate-left .gate-icon {
+            color: var(--text-muted);
+        }
+
+        .gate-left:hover .gate-icon {
+            color: var(--cyan);
+            transform: scale(1.1);
+        }
+
+        .gate-right .gate-icon {
+            color: var(--text-muted);
+        }
+
+        .gate-right:hover .gate-icon {
+            color: var(--gold);
+            transform: scale(1.1);
+        }
+
+        .gate-title {
+            font-family: 'Playfair Display', serif;
+            font-size: 1.8rem;
+            color: var(--text-main);
+            margin-bottom: 0.5rem;
+        }
+
+        .gate-desc {
+            font-size: 0.9rem;
+            color: var(--text-muted);
+            text-align: center;
+            max-width: 80%;
+            line-height: 1.5;
+        }
+
+        .tag {
+            position: absolute;
+            top: 20px;
+            font-size: 0.7rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            padding: 5px 10px;
+            border-radius: 20px;
+        }
+
+        .tag-public {
+            color: var(--cyan);
+            background: rgba(14, 165, 233, 0.1);
+        }
+
+        .tag-private {
+            color: var(--gold);
+            background: rgba(212, 163, 115, 0.15);
+        }
+
+        .footer-tag {
+            position: absolute;
+            bottom: 40px;
+            display: flex;
+            gap: 2rem;
+            font-size: 0.8rem;
+            color: var(--text-muted);
+            font-weight: 500;
+        }
+
+        .footer-tag i {
+            color: var(--gold);
+            margin-right: 5px;
+        }
+
+        /* --- AJUSTES PARA O SAMSUNG J7 (MOBILE) --- */
+        @media (max-width: 900px) {
+            .portal-container {
+                flex-direction: column;
+                gap: 1.5rem;
+                margin-top: 1rem;
+                padding: 1rem;
+            }
+
+            .connector-line {
+                display: none;
+            }
+
+            /* Logo sobe para o topo */
+            .logo-center {
+                order: 1;
+                width: 140px;
+                height: 140px;
+                margin-bottom: 1rem;
+            }
+
+            .logo-img {
+                width: 80px;
+            }
+
+            /* Cartões ficam horizontais */
+            .portal-gate {
+                order: 2;
+                width: 100%;
+                /* Ocupa largura total */
+                height: 120px;
+                flex-direction: row;
+                /* Ícone ao lado do texto */
+                justify-content: flex-start;
+                padding: 0 1.5rem;
+                gap: 20px;
+            }
+
+            .gate-icon {
+                margin-bottom: 0;
+                font-size: 2rem;
+            }
+
+            .gate-desc {
+                display: none;
+            }
+
+            /* Esconde descrição para poupar espaço */
+            .gate-title {
+                font-size: 1.4rem;
+                margin-bottom: 0;
+            }
+
+            .footer-tag {
+                position: relative;
+                bottom: auto;
+                margin-top: 2rem;
+                flex-direction: column;
+                gap: 0.5rem;
+                align-items: center;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="floating-background">
+        <i class="fa-solid fa-chart-pie float-icon i-erp icon-navy" title="ERP"></i>
+        <i class="fa-solid fa-robot float-icon i-crm icon-gold" title="Automação"></i>
+        <i class="fa-solid fa-brain float-icon i-ia icon-navy" title="IA Central"></i>
+        <i class="fa-solid fa-server float-icon i-cloud icon-navy" title="Soberania"></i>
+        <i class="fa-solid fa-code float-icon i-dev icon-gold" title="Dev"></i>
+
+        <i class="fa-solid fa-prescription-bottle-medical float-icon i-pharma icon-cyan" title="Farmácia"></i>
+        <i class="fa-solid fa-user-doctor float-icon i-doctor icon-cyan" title="Clínica"></i>
+        <i class="fa-solid fa-heart-pulse float-icon i-pulse icon-cyan" title="Saúde"></i>
+
+        <i class="fa-solid fa-book-open float-icon i-book icon-gold" title="Ensino"></i>
+        <i class="fa-solid fa-user-graduate float-icon i-grad icon-gold" title="Academia"></i>
+        <i class="fa-solid fa-seedling float-icon i-growth icon-navy" title="Desenvolvimento Pessoal"></i>
+        <i class="fa-solid fa-arrow-trend-up float-icon i-trend icon-navy" title="Coaching Profissional"></i>
+
+        <i class="fa-solid fa-bullhorn float-icon i-mkt icon-gold" title="Marketing"></i>
+        <i class="fa-solid fa-magnifying-glass-chart float-icon i-seo icon-cyan" title="SEO"></i>
+    </div>
+
+    <div class="portal-container">
+        <div class="connector-line"></div>
+
+        <a href="/store" class="portal-gate gate-left">
+            <span class="tag tag-public">Público</span>
+            <i class="fa-solid fa-store gate-icon"></i>
+            <div>
+                <h2 class="gate-title">Dumbanengue</h2>
+                <p class="gate-desc">
+                    Montra de Soluções.<br>Portfólio & Mercado.
+                </p>
+            </div>
+        </a>
+
+        <div class="logo-center">
+            <img src="assets/images/Logo-carpintaria.svg" alt="CD" class="logo-img"
+                onerror="this.style.display='none'; this.parentElement.innerHTML='<span style=\'color:white; font-size:3rem; font-family:Playfair Display\'>CD</span>'">
+            <div
+                style="position:absolute; bottom:-15px; background:var(--gold); color:var(--navy-brand); font-size:0.6rem; font-weight:900; padding:2px 8px; border-radius:10px; text-transform:uppercase; letter-spacing:1px; box-shadow:0 5px 15px rgba(212, 163, 115, 0.4);">
+                Gold Edition</div>
+        </div>
+
+        <div class="portal-gate gate-right" onclick="abrirLogin(); return false;"
+            style="border: 2px solid var(--gold); background: linear-gradient(145deg, #ffffff, #fffdfa);">
+            <span class="tag tag-private" style="background:var(--gold); color:white;">Master Key</span>
+            <div
+                style="background:var(--gold); width:60px; height:60px; border-radius:50%; display:flex; align-items:center; justify-content:center; margin-bottom:1rem; box-shadow:0 10px 20px rgba(212, 163, 115, 0.3);">
+                <i class="fa-solid fa-key" style="color:white; font-size:1.8rem;"></i>
+            </div>
+            <div>
+                <h2 class="gate-title">Escritório</h2>
+                <p class="gate-desc">
+                    Acesso ao Ateliê.<br>Ativar Chave do Mestre.
+                </p>
+            </div>
+        </div>
+
+    </div>
+
+    <div class="footer-tag">
+        <span><i class="fa-solid fa-wifi"></i> Offline-First</span>
+        <span><i class="fa-solid fa-shield-halved"></i> Soberania Digital</span>
+        <span><i class="fa-solid fa-hammer"></i> Desde 2026</span>
+    </div>
+
+    <div id="modalLogin"
+        style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(15, 23, 42, 0.4); backdrop-filter:blur(20px); z-index:100; align-items:center; justify-content:center;">
+        <div
+            style="background: linear-gradient(135deg, #ffffff 0%, #f8fdfd 100%); padding: 3rem; border: 1px solid rgba(212, 163, 115, 0.3); border-radius: 40px; text-align: center; width: 420px; box-shadow: 0 50px 100px rgba(0,0,0,0.25); animation: modalIn 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);">
+            <div
+                style="background: var(--navy-brand); width: 80px; height: 80px; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 1.5rem auto; box-shadow: 0 15px 30px rgba(15, 23, 42, 0.3); border: 2px solid var(--gold);">
+                <i class="fa-solid fa-lock" id="vault-icon"
+                    style="font-size: 2rem; color: var(--gold); transition: 0.3s;"></i>
+            </div>
+            <h3
+                style="color: var(--navy-brand); font-family: 'Playfair Display'; font-size: 2rem; margin-bottom: 0.5rem; letter-spacing: -0.5px;">
+                Cofre do Mestre</h3>
+            <p id="login-feedback"
+                style="color: var(--text-muted); font-size: 0.85rem; margin-bottom: 2rem; font-weight: 500;">
+                Autenticação Necessária</p>
+
+            <div id="pin-display" style="display: flex; gap: 15px; justify-content: center; margin-bottom: 2rem;">
+                <div class="pin-dot"></div>
+                <div class="pin-dot"></div>
+                <div class="pin-dot"></div>
+                <div class="pin-dot"></div>
+            </div>
+
+            <div class="pin-grid"
+                style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; margin-bottom: 2rem;">
+                <button class="pin-btn" onclick="pressPin('1')">1</button>
+                <button class="pin-btn" onclick="pressPin('2')">2</button>
+                <button class="pin-btn" onclick="pressPin('3')">3</button>
+                <button class="pin-btn" onclick="pressPin('4')">4</button>
+                <button class="pin-btn" onclick="pressPin('5')">5</button>
+                <button class="pin-btn" onclick="pressPin('6')">6</button>
+                <button class="pin-btn" onclick="pressPin('7')">7</button>
+                <button class="pin-btn" onclick="pressPin('8')">8</button>
+                <button class="pin-btn" onclick="pressPin('9')">9</button>
+                <button class="pin-btn pin-clear" onclick="clearPin()"><i class="fa-solid fa-delete-left"></i></button>
+                <button class="pin-btn" onclick="pressPin('0')">0</button>
+                <button class="pin-btn pin-confirm" onclick="confirmPin()"><i class="fa-solid fa-check"></i></button>
+            </div>
+
+            <button onclick="document.getElementById('modalLogin').style.display='none'"
+                style="color: var(--text-muted); background: transparent; border: none; font-size: 0.9rem; cursor: pointer; text-decoration: underline;">Voltar
+                ao Portal</button>
+        </div>
+    </div>
+
+    <style>
+        @keyframes modalIn {
+            from {
+                opacity: 0;
+                transform: scale(0.9) translateY(20px);
+            }
+
+            to {
+                opacity: 1;
+                transform: scale(1) translateY(0);
+            }
+        }
+
+        .pin-dot {
+            width: 15px;
+            height: 15px;
+            border-radius: 50%;
+            border: 2px solid #e2e8f0;
+            transition: all 0.2s;
+        }
+
+        .pin-dot.active {
+            background: var(--gold);
+            border-color: var(--gold);
+            transform: scale(1.2);
+            box-shadow: 0 0 10px var(--gold);
+        }
+
+        .pin-btn {
+            height: 65px;
+            background: #f8fafc;
+            border: 1px solid #e2e8f0;
+            border-radius: 16px;
+            font-size: 1.5rem;
+            font-weight: 600;
+            color: var(--navy-brand);
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .pin-btn:hover {
+            background: #fff;
+            border-color: var(--gold);
+            transform: scale(1.05);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
+        }
+
+        .pin-btn:active {
+            transform: scale(0.95);
+        }
+
+        .pin-confirm {
+            background: var(--navy-brand);
+            color: var(--gold);
+            border: none;
+        }
+
+        .pin-clear {
+            color: #ef4444;
+        }
+    </style>
+
+    <script>
+        // --- SISTEMA DE ACESSO CARPINTARIA OS ---
+
+        let currentPin = "";
+
+        function pressPin(num) {
+            if (currentPin.length < 4) {
+                currentPin += num;
+                updatePinDisplay();
+            }
+        }
+
+        function clearPin() {
+            currentPin = currentPin.slice(0, -1);
+            updatePinDisplay();
+        }
+
+        function updatePinDisplay() {
+            const dots = document.querySelectorAll('.pin-dot');
+            dots.forEach((dot, idx) => {
+                if (idx < currentPin.length) dot.classList.add('active');
+                else dot.classList.remove('active');
+            });
+        }
+
+        async function confirmPin() {
+            if (currentPin.length < 4) {
+                shakeModal();
+                return;
+            }
+            await fazerLogin(currentPin);
+        }
+
+        async function fazerLogin(pin) {
+            const feedback = document.getElementById('login-feedback');
+            feedback.textContent = 'Processando...';
+
+            try {
+                // Pin fixo inicial '2026' ou '0000' baseado em admin
+                const res = await fetch('/api/auth/login', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ username: "admin", password: pin })
+                });
+
+                const data = await res.json();
+
+                if (res.ok && data.success) {
+                    localStorage.setItem('carpintaria_token', data.token);
+                    feedback.style.color = "#10b981";
+                    feedback.textContent = "Chave Aceite!";
+                    document.getElementById('vault-icon').className = "fa-solid fa-lock-open";
+                    document.getElementById('vault-icon').style.color = "#10b981";
+                    setTimeout(() => window.location.href = '/office', 1200);
+                } else {
+                    shakeModal();
+                    feedback.style.color = "#ef4444";
+                    feedback.textContent = "Sequência Inválida.";
+                    currentPin = "";
+                    updatePinDisplay();
+                }
+            } catch (e) {
+                feedback.textContent = "Erro de conexão.";
+            }
+        }
+
+        function shakeModal() {
+            const modal = document.querySelector('#modalLogin div');
+            modal.style.animation = "shake 0.4s ease-in-out";
+            setTimeout(() => modal.style.animation = "", 400);
+        }
+
+        function abrirLogin() {
+            document.getElementById('modalLogin').style.display = 'flex';
+            currentPin = "";
+            updatePinDisplay();
+            document.getElementById('login-feedback').textContent = 'Insira a sequência de segurança.';
+            document.getElementById('login-feedback').style.color = '';
+        }
+
+        // Fechar modal ao clicar fora
+        window.onclick = function (event) {
+            const modal = document.getElementById('modalLogin');
+            if (event.target == modal) {
+                modal.style.display = "none";
+            }
+        }
+    </script>
+
+    <!-- Vercel Speed Insights -->
+    <script src="https://unpkg.com/@vercel/speed-insights@1.3.1/dist/index.js" defer></script>
+    <script>
+        // Inicializar Speed Insights quando o DOM estiver carregado
+        document.addEventListener('DOMContentLoaded', function () {
+            if (window.speedInsights) {
+                window.speedInsights.init({
+                    dsn: 'https://speed-insights.vercel.app',
+                    environment: 'production'
+                });
+            }
+        });
+    </script>
+    <script>
+        // PWA Service Worker Registration
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('/static/sw.js')
+                    .then(reg => console.log('Service Worker registrado!', reg.scope))
+                    .catch(err => console.log('Falha ao registrar Service Worker:', err));
+            });
+        }
+    </script>
+</body>
+
+</html>

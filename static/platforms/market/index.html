@@ -1,0 +1,484 @@
+<!DOCTYPE html>
+<html lang="pt">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Market Negócios | Diretório Premium</title>
+
+    <link
+        href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&family=Inter:wght@300;400;500;600&display=swap"
+        rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+
+    <link rel="manifest" href="manifest.json">
+
+    <style>
+        /* --- DESIGN SYSTEM (Market Gold) --- */
+        :root {
+            --bg-body: #F8FAFC;
+            --bg-panel: #FFFFFF;
+            --brand-dark: #0f172a;
+            --brand-gold: #D4A373;
+            --brand-accent: #0ea5e9;
+            --text-main: #334155;
+            --text-muted: #64748b;
+            --border: 1px solid rgba(0, 0, 0, 0.08);
+            --shadow: 0 10px 30px -5px rgba(0, 0, 0, 0.05);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background-color: var(--bg-body);
+            color: var(--text-main);
+            font-family: 'Inter', sans-serif;
+            overflow-x: hidden;
+        }
+
+        /* --- HEADER --- */
+        header {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            padding: 1rem 2rem;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            border-bottom: var(--border);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .back-link {
+            text-decoration: none;
+            color: var(--text-main);
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            transition: 0.3s;
+        }
+
+        .back-link:hover {
+            color: var(--brand-gold);
+            transform: translateX(-5px);
+        }
+
+        .logo {
+            font-family: 'Playfair Display';
+            font-weight: 900;
+            font-size: 1.5rem;
+            color: var(--brand-dark);
+        }
+
+        /* --- HERO & PESQUISA --- */
+        .hero {
+            background: radial-gradient(circle at center, #fff 0%, #f1f5f9 100%);
+            padding: 4rem 2rem 2rem 2rem;
+            text-align: center;
+        }
+
+        .hero h1 {
+            font-family: 'Playfair Display';
+            font-size: 3rem;
+            color: var(--brand-dark);
+            margin-bottom: 1rem;
+        }
+
+        .hero p {
+            color: var(--text-muted);
+            max-width: 600px;
+            margin: 0 auto 2rem auto;
+        }
+
+        .search-container {
+            max-width: 600px;
+            margin: 0 auto;
+            position: relative;
+        }
+
+        .search-input {
+            width: 100%;
+            padding: 18px 25px;
+            padding-left: 55px;
+            border-radius: 50px;
+            border: 1px solid #e2e8f0;
+            font-size: 1rem;
+            box-shadow: 0 10px 40px -10px rgba(0, 0, 0, 0.1);
+            outline: none;
+            transition: 0.3s;
+        }
+
+        .search-input:focus {
+            border-color: var(--brand-gold);
+            box-shadow: 0 10px 40px -5px rgba(212, 163, 115, 0.2);
+        }
+
+        .search-icon {
+            position: absolute;
+            left: 20px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--text-muted);
+            font-size: 1.2rem;
+        }
+
+        /* --- FILTROS (Cápsulas) --- */
+        .filters {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            margin: 2rem 0;
+            flex-wrap: wrap;
+            padding: 0 1rem;
+        }
+
+        .filter-pill {
+            padding: 8px 20px;
+            border-radius: 30px;
+            border: 1px solid #e2e8f0;
+            background: white;
+            color: var(--text-muted);
+            cursor: pointer;
+            transition: 0.3s;
+            font-size: 0.9rem;
+            font-weight: 500;
+        }
+
+        .filter-pill:hover,
+        .filter-pill.active {
+            background: var(--brand-dark);
+            color: white;
+            border-color: var(--brand-dark);
+        }
+
+        /* --- GRELHA DE NEGÓCIOS --- */
+        .business-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 2rem;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 2rem 5rem 2rem;
+        }
+
+        /* --- CARTÃO DE NEGÓCIO --- */
+        .biz-card {
+            background: white;
+            border-radius: 20px;
+            overflow: hidden;
+            border: var(--border);
+            box-shadow: var(--shadow);
+            transition: 0.3s;
+            display: flex;
+            flex-direction: column;
+            position: relative;
+        }
+
+        .biz-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 20px 40px -10px rgba(0, 0, 0, 0.15);
+        }
+
+        /* Banner de Imagem (Placeholder elegante) */
+        .biz-cover {
+            height: 160px;
+            background-color: #f1f5f9;
+            position: relative;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+        }
+
+        .biz-cover img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            transition: 0.5s;
+        }
+
+        .biz-card:hover .biz-cover img {
+            transform: scale(1.1);
+        }
+
+        .biz-badge {
+            position: absolute;
+            top: 15px;
+            left: 15px;
+            background: rgba(255, 255, 255, 0.9);
+            backdrop-filter: blur(4px);
+            padding: 4px 10px;
+            border-radius: 12px;
+            font-size: 0.7rem;
+            font-weight: 700;
+            color: var(--brand-dark);
+            text-transform: uppercase;
+        }
+
+        .biz-content {
+            padding: 1.5rem;
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .biz-title {
+            font-family: 'Playfair Display';
+            font-size: 1.4rem;
+            color: var(--brand-dark);
+            margin-bottom: 5px;
+        }
+
+        .biz-rating {
+            color: #fbbf24;
+            font-size: 0.8rem;
+            margin-bottom: 10px;
+        }
+
+        .biz-desc {
+            font-size: 0.9rem;
+            color: var(--text-muted);
+            line-height: 1.5;
+            margin-bottom: 1.5rem;
+        }
+
+        .biz-actions {
+            margin-top: auto;
+            display: flex;
+            gap: 10px;
+        }
+
+        .btn-contact {
+            flex: 1;
+            padding: 10px;
+            border-radius: 10px;
+            text-align: center;
+            text-decoration: none;
+            font-weight: 600;
+            font-size: 0.9rem;
+            transition: 0.2s;
+            border: 1px solid transparent;
+        }
+
+        .btn-whatsapp {
+            background: #25D366;
+            color: white;
+        }
+
+        .btn-whatsapp:hover {
+            background: #1ebc57;
+            box-shadow: 0 5px 15px rgba(37, 211, 102, 0.2);
+        }
+
+        .btn-details {
+            border: 1px solid #e2e8f0;
+            color: var(--text-muted);
+        }
+
+        .btn-details:hover {
+            border-color: var(--brand-gold);
+            color: var(--brand-gold);
+        }
+
+        /* Card "Anuncie Aqui" */
+        .biz-card.promo {
+            border: 2px dashed #cbd5e1;
+            background: transparent;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            min-height: 380px;
+        }
+
+        .biz-card.promo:hover {
+            border-color: var(--brand-gold);
+            background: #fffdf5;
+        }
+
+        /* Ribbon Destaque */
+        .featured-ribbon {
+            position: absolute;
+            top: 15px;
+            right: -30px;
+            background: var(--brand-gold);
+            color: white;
+            padding: 5px 40px;
+            transform: rotate(45deg);
+            font-size: 0.7rem;
+            font-weight: 700;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+            z-index: 10;
+        }
+    </style>
+</head>
+
+<body>
+
+    <header>
+        <a href="/store" class="back-link">
+            <i class="fa-solid fa-arrow-left"></i> Voltar
+        </a>
+        <div class="logo">Negócios<span style="color: var(--brand-gold);">.</span></div>
+        <div style="width: 80px;"></div>
+    </header>
+
+    <section class="hero">
+        <h1>Conexões de Valor</h1>
+        <p>Encontre serviços, produtos e parceiros de confiança em Moçambique.</p>
+
+        <div class="search-container">
+            <i class="fa-solid fa-search search-icon"></i>
+            <input type="text" id="searchInput" class="search-input"
+                placeholder="O que procura? (Ex: Moda, Design, Contabilidade...)" onkeyup="filtrarPesquisa()">
+        </div>
+    </section>
+
+    <div class="filters">
+        <button class="filter-pill active" onclick="filtrarCat('todos')">Todos</button>
+        <button class="filter-pill" onclick="filtrarCat('moda')">Moda</button>
+        <button class="filter-pill" onclick="filtrarCat('servicos')">Serviços</button>
+        <button class="filter-pill" onclick="filtrarCat('tech')">Tecnologia</button>
+        <button class="filter-pill" onclick="filtrarCat('alimentacao')">Alimentação</button>
+    </div>
+
+    <div class="business-grid" id="bizGrid">
+
+        <div class="biz-card cat-moda" data-name="Capulana Chique">
+            <div class="featured-ribbon">TOP</div>
+            <div class="biz-cover">
+                <span class="biz-badge">Moda</span>
+                <img src="https://images.unsplash.com/photo-1585487000160-6ebcfceb0d03?q=80&w=600" alt="Capulana">
+            </div>
+            <div class="biz-content">
+                <div class="biz-title">Capulana Chique</div>
+                <div class="biz-rating">
+                    <i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i><i
+                        class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i>
+                    <span style="color: #94a3b8; margin-left: 5px;">(5.0)</span>
+                </div>
+                <p class="biz-desc">Vestidos exclusivos e camisas feitas à mão com tecidos locais de alta qualidade.</p>
+                <div class="biz-actions">
+                    <a href="#" class="btn-contact btn-details">Ver Perfil</a>
+                    <a href="https://wa.me/258840000000?text=Olá, vi na Carpintaria: Capulana Chique"
+                        class="btn-contact btn-whatsapp"><i class="fa-brands fa-whatsapp"></i></a>
+                </div>
+            </div>
+        </div>
+
+        <div class="biz-card cat-servicos" data-name="Tech Fix">
+            <div class="biz-cover">
+                <span class="biz-badge">Serviços</span>
+                <img src="https://images.unsplash.com/photo-1581092921461-eab62e97a782?q=80&w=600" alt="Tech">
+            </div>
+            <div class="biz-content">
+                <div class="biz-title">Tech Fix Maputo</div>
+                <div class="biz-rating">
+                    <i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i><i
+                        class="fa-solid fa-star"></i><i class="fa-regular fa-star"></i>
+                    <span style="color: #94a3b8; margin-left: 5px;">(4.2)</span>
+                </div>
+                <p class="biz-desc">Reparação de computadores, impressoras e instalação de redes.</p>
+                <div class="biz-actions">
+                    <a href="#" class="btn-contact btn-details">Ver Perfil</a>
+                    <a href="https://wa.me/258840000000?text=Olá Tech Fix, preciso de ajuda."
+                        class="btn-contact btn-whatsapp"><i class="fa-brands fa-whatsapp"></i></a>
+                </div>
+            </div>
+        </div>
+
+        <div class="biz-card cat-alimentacao" data-name="Sabor da Terra">
+            <div class="biz-cover">
+                <span class="biz-badge">Alimentação</span>
+                <img src="https://images.unsplash.com/photo-1555939594-58d7cb561ad1?q=80&w=600" alt="Comida">
+            </div>
+            <div class="biz-content">
+                <div class="biz-title">Sabor da Terra</div>
+                <div class="biz-rating">
+                    <i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i><i
+                        class="fa-solid fa-star"></i><i class="fa-solid fa-star-half-stroke"></i>
+                    <span style="color: #94a3b8; margin-left: 5px;">(4.8)</span>
+                </div>
+                <p class="biz-desc">Catering para eventos e marmitas saudáveis. Entrega em todo o Maputo.</p>
+                <div class="biz-actions">
+                    <a href="#" class="btn-contact btn-details">Ver Perfil</a>
+                    <a href="https://wa.me/258840000000?text=Olá, quero encomendar comida."
+                        class="btn-contact btn-whatsapp"><i class="fa-brands fa-whatsapp"></i></a>
+                </div>
+            </div>
+        </div>
+
+        <div class="biz-card promo">
+            <i class="fa-solid fa-bullhorn" style="font-size: 3rem; color: var(--brand-gold); margin-bottom: 1rem;"></i>
+            <h3 style="color: var(--brand-dark); margin-bottom: 0.5rem;">O Teu Negócio Aqui</h3>
+            <p style="color: var(--text-muted); font-size: 0.9rem; max-width: 80%;">Junta-te à elite empresarial de
+                Moçambique.</p>
+            <a href="https://wa.me/258840000000?text=Quero anunciar no Market Negócios" class="btn-contact btn-whatsapp"
+                style="margin-top: 1rem; width: auto; padding: 10px 30px;">
+                Criar Anúncio
+            </a>
+        </div>
+
+    </div>
+
+    <footer style="text-align: center; padding: 2rem; color: #94a3b8; font-size: 0.8rem; border-top: var(--border);">
+        <p>© 2026 Carpintaria Digital • Diretório Soberano</p>
+    </footer>
+
+    <script>
+        // Filtro por Categoria
+        function filtrarCat(cat) {
+            // Estilo Botões
+            document.querySelectorAll('.filter-pill').forEach(btn => btn.classList.remove('active'));
+            event.target.classList.add('active');
+
+            // Lógica
+            const cards = document.querySelectorAll('.biz-card');
+            cards.forEach(card => {
+                if (card.classList.contains('promo')) return; // Ignora o card de promo
+
+                if (cat === 'todos') {
+                    card.style.display = 'flex';
+                } else if (card.classList.contains('cat-' + cat)) {
+                    card.style.display = 'flex';
+                } else {
+                    card.style.display = 'none';
+                }
+            });
+        }
+
+        // Filtro por Texto (Pesquisa)
+        function filtrarPesquisa() {
+            const input = document.getElementById('searchInput').value.toLowerCase();
+            const cards = document.querySelectorAll('.biz-card');
+
+            cards.forEach(card => {
+                if (card.classList.contains('promo')) return;
+
+                const name = card.getAttribute('data-name').toLowerCase();
+                const desc = card.querySelector('.biz-desc').innerText.toLowerCase();
+
+                if (name.includes(input) || desc.includes(input)) {
+                    card.style.display = 'flex';
+                } else {
+                    card.style.display = 'none';
+                }
+            });
+        }
+
+        // PWA Register
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('/sw.js');
+            });
+        }
+    </script>
+
+</body>
+
+</html>

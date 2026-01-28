@@ -1,0 +1,29 @@
+/* --- CORREÇÃO ELITE PARA SAMSUNG J7 --- */
+@media (max-width: 768px) {
+    
+    /* 1. Ajustar o Texto Gigante */
+    .logo-title { font-size: 2rem !important; }
+    
+    /* 2. Forçar a Grelha a ser legível */
+    .app-grid {
+        grid-template-columns: 1fr 1fr !important; /* 2 Colunas no menu */
+        gap: 15px !important;
+    }
+
+    /* 3. O Escritório fica largo (fácil de clicar com o polegar) */
+    .card-office {
+        grid-column: span 2 !important;
+        background: linear-gradient(135deg, rgba(251, 191, 36, 0.1) 0%, rgba(30, 41, 59, 0.8) 100%) !important;
+        border-color: var(--accent-gold) !important;
+    }
+
+    /* 4. Ajustes nas páginas internas */
+    .metrics-grid, 
+    .showroom-grid,
+    .dashboard-grid {
+        grid-template-columns: 1fr !important; /* 1 Coluna nas páginas de conteúdo */
+    }
+
+    .sidebar { display: none; } /* Esconde a barra lateral no telemóvel se existir */
+    .app-container { grid-template-columns: 1fr; } /* Layout de 1 coluna */
+}

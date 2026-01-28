@@ -1,0 +1,560 @@
+<!DOCTYPE html>
+<html lang="pt">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Academia & Soluções | Carpintaria Digital</title>
+
+    <link
+        href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&family=Inter:wght@300;400;600&family=Fira+Code:wght@500&display=swap"
+        rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+
+    <link rel="manifest" href="manifest.json">
+
+    <style>
+        /* --- DESIGN SYSTEM (SOLUCIONADOR) --- */
+        :root {
+            --bg-body: #F8FAFC;
+            --bg-panel: #FFFFFF;
+            --brand-dark: #0f172a;
+            /* Navy (Consultoria) */
+            --brand-gold: #D4A373;
+            /* Ouro (Brand) */
+            --brand-edu: #9f1239;
+            /* Vinho (Academia/Coaching) */
+            --text-main: #334155;
+            --text-muted: #64748b;
+            --shadow: 0 10px 30px -5px rgba(0, 0, 0, 0.08);
+            --radius: 16px;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background-color: var(--bg-body);
+            color: var(--text-main);
+            font-family: 'Inter', sans-serif;
+            overflow-x: hidden;
+        }
+
+        /* --- HEADER --- */
+        header {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            padding: 1rem 2rem;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .back-link {
+            text-decoration: none;
+            color: var(--text-main);
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            transition: 0.3s;
+        }
+
+        .back-link:hover {
+            color: var(--brand-gold);
+            transform: translateX(-5px);
+        }
+
+        .logo {
+            font-family: 'Playfair Display';
+            font-weight: 900;
+            font-size: 1.5rem;
+            color: var(--brand-dark);
+        }
+
+        /* --- HERO --- */
+        .hero {
+            text-align: center;
+            padding: 4rem 2rem 2rem 2rem;
+            background: radial-gradient(circle at center, #fff 0%, #f1f5f9 100%);
+        }
+
+        .hero h1 {
+            font-family: 'Playfair Display';
+            font-size: 3rem;
+            color: var(--brand-dark);
+            margin-bottom: 1rem;
+        }
+
+        .hero p {
+            color: var(--text-muted);
+            max-width: 700px;
+            margin: 0 auto 2rem auto;
+            font-size: 1.1rem;
+            line-height: 1.6;
+        }
+
+        /* --- SWITCHER (Abas) --- */
+        .switcher-container {
+            display: flex;
+            justify-content: center;
+            margin-bottom: 3rem;
+        }
+
+        .switcher {
+            background: #e2e8f0;
+            padding: 5px;
+            border-radius: 50px;
+            display: flex;
+            position: relative;
+        }
+
+        .switch-btn {
+            padding: 10px 30px;
+            border: none;
+            background: transparent;
+            font-weight: 600;
+            color: var(--text-muted);
+            cursor: pointer;
+            border-radius: 40px;
+            transition: 0.3s;
+            z-index: 2;
+            min-width: 150px;
+        }
+
+        /* Cores Ativas */
+        .switch-btn.active {
+            background: white;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+        }
+
+        .btn-edu.active {
+            color: var(--brand-edu);
+        }
+
+        .btn-solucoes.active {
+            color: var(--brand-dark);
+        }
+
+        /* --- ÁREAS DE CONTEÚDO --- */
+        .content-section {
+            display: none;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 2rem 5rem 2rem;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .content-section.active {
+            display: grid;
+            opacity: 1;
+            animation: fadeIn 0.5s ease forwards;
+        }
+
+        .grid-courses {
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 2rem;
+        }
+
+        .grid-services {
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: 2rem;
+        }
+
+        /* --- CARTÕES (ACADEMIA) --- */
+        .course-card {
+            background: white;
+            border-radius: var(--radius);
+            overflow: hidden;
+            box-shadow: var(--shadow);
+            transition: 0.3s;
+            border: 1px solid rgba(0, 0, 0, 0.05);
+            display: flex;
+            flex-direction: column;
+        }
+
+        .course-card:hover {
+            transform: translateY(-5px);
+            border-color: var(--brand-edu);
+        }
+
+        .course-header {
+            height: 160px;
+            background: #ffe4e6;
+            position: relative;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .course-icon {
+            font-size: 4rem;
+            color: var(--brand-edu);
+            opacity: 0.2;
+        }
+
+        .badge-type {
+            position: absolute;
+            top: 15px;
+            right: 15px;
+            background: rgba(255, 255, 255, 0.9);
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 0.7rem;
+            font-weight: 700;
+            color: var(--brand-dark);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .course-body {
+            padding: 1.5rem;
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .course-title {
+            font-family: 'Playfair Display';
+            font-size: 1.3rem;
+            margin-bottom: 0.5rem;
+            color: var(--brand-dark);
+        }
+
+        .course-desc {
+            font-size: 0.9rem;
+            color: var(--text-muted);
+            margin-bottom: 1.5rem;
+            line-height: 1.6;
+        }
+
+        .course-meta {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: auto;
+            padding-top: 1rem;
+            border-top: 1px solid #f1f5f9;
+        }
+
+        .btn-course {
+            display: block;
+            width: 100%;
+            padding: 12px;
+            margin-top: 1rem;
+            text-align: center;
+            background: var(--brand-edu);
+            color: white;
+            text-decoration: none;
+            border-radius: 8px;
+            font-weight: 600;
+            transition: 0.2s;
+        }
+
+        .btn-course:hover {
+            background: #881337;
+        }
+
+        /* --- CARTÕES (SOLUÇÕES) --- */
+        .service-card {
+            background: var(--brand-dark);
+            color: white;
+            border-radius: var(--radius);
+            padding: 2.5rem;
+            position: relative;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            min-height: 320px;
+        }
+
+        .service-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: radial-gradient(circle at top right, rgba(212, 163, 115, 0.1), transparent 60%);
+            z-index: 0;
+        }
+
+        .service-content {
+            position: relative;
+            z-index: 1;
+            display: flex;
+            flex-direction: column;
+            height: 100%;
+        }
+
+        .srv-icon {
+            font-size: 3rem;
+            color: var(--brand-gold);
+            margin-bottom: 1.5rem;
+        }
+
+        .srv-title {
+            font-family: 'Playfair Display';
+            font-size: 1.8rem;
+            margin-bottom: 1rem;
+        }
+
+        .srv-desc {
+            color: #cbd5e1;
+            line-height: 1.6;
+            margin-bottom: 2rem;
+            font-size: 0.95rem;
+        }
+
+        .srv-list {
+            list-style: none;
+            margin-bottom: 2rem;
+        }
+
+        .srv-list li {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 10px;
+            color: #e2e8f0;
+            font-size: 0.9rem;
+        }
+
+        .srv-list li i {
+            color: var(--brand-gold);
+            font-size: 0.8rem;
+        }
+
+        .btn-solucao {
+            display: inline-block;
+            padding: 12px 25px;
+            border: 1px solid var(--brand-gold);
+            color: var(--brand-gold);
+            text-decoration: none;
+            border-radius: 8px;
+            font-weight: 600;
+            transition: 0.3s;
+            text-align: center;
+            margin-top: auto;
+        }
+
+        .btn-solucao:hover {
+            background: var(--brand-gold);
+            color: var(--brand-dark);
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        footer {
+            text-align: center;
+            padding: 2rem;
+            color: var(--text-muted);
+            font-size: 0.8rem;
+            border-top: 1px solid rgba(0, 0, 0, 0.05);
+        }
+    </style>
+</head>
+
+<body>
+
+    <header>
+        <a href="/store" class="back-link">
+            <i class="fa-solid fa-arrow-left"></i> Voltar
+        </a>
+        <div class="logo">Academia <span style="color: var(--text-muted); font-size: 1rem;">&</span> Soluções</div>
+        <div style="width: 80px;"></div>
+    </header>
+
+    <section class="hero">
+        <h1 id="heroTitle">Potencial <span style="color:var(--brand-edu); font-style:italic;">Humano</span></h1>
+        <p id="heroDesc">Treinamento, Coaching e Cursos para elevar o nível da sua carreira e da sua equipa.</p>
+
+        <div class="switcher-container">
+            <div class="switcher">
+                <button class="switch-btn btn-edu active" onclick="switchMode('edu')">Desenvolvimento</button>
+                <button class="switch-btn btn-solucoes" onclick="switchMode('solucoes')">Soluções & Projetos</button>
+            </div>
+        </div>
+    </section>
+
+    <section id="panel-edu" class="content-section active grid-courses">
+
+        <div class="course-card">
+            <div class="course-header" style="background: #fff1f2;">
+                <div class="badge-type" style="color: #be123c;">Coaching</div>
+                <i class="fa-solid fa-person-rays course-icon" style="color: #be123c;"></i>
+            </div>
+            <div class="course-body">
+                <h3 class="course-title">Desenvolvimento Pessoal</h3>
+                <p class="course-desc">Sessões individuais para desbloquear potencial, definir metas claras e criar um
+                    plano de vida.</p>
+                <div class="course-meta">
+                    <span style="font-size: 0.8rem; color: #64748b;"><i class="fa-brands fa-whatsapp"></i> Online /
+                        Presencial</span>
+                </div>
+                <a href="https://wa.me/258834616193?text=Quero saber mais sobre Coaching Pessoal." target="_blank"
+                    class="btn-course">Agendar Sessão</a>
+            </div>
+        </div>
+
+        <div class="course-card">
+            <div class="course-header" style="background: #f0fdf4;">
+                <div class="badge-type" style="color: #15803d;">Empresas</div>
+                <i class="fa-solid fa-users-viewfinder course-icon" style="color: #15803d;"></i>
+            </div>
+            <div class="course-body">
+                <h3 class="course-title">Treinamento de Equipas</h3>
+                <p class="course-desc">Formação para empresas em liderança, produtividade e uso de ferramentas digitais.
+                </p>
+                <div class="course-meta">
+                    <span style="font-size: 0.8rem; color: #64748b;"><i class="fa-solid fa-briefcase"></i>
+                        In-Company</span>
+                </div>
+                <a href="https://wa.me/258834616193?text=Preciso de treino para a minha equipa." target="_blank"
+                    class="btn-course" style="background: #15803d;">Pedir Proposta</a>
+            </div>
+        </div>
+
+        <div class="course-card">
+            <div class="course-header" style="background: #ecfccb;">
+                <div class="badge-type" style="color: #65a30d;">Micro-Learning</div>
+                <i class="fa-brands fa-whatsapp course-icon" style="color: #65a30d;"></i>
+            </div>
+            <div class="course-body">
+                <h3 class="course-title">Cursos via WhatsApp</h3>
+                <p class="course-desc">Aprenda ao seu ritmo. Cursos práticos de vendas, gestão e tecnologia entregues no
+                    seu telemóvel.</p>
+                <div class="course-meta">
+                    <span style="font-size: 0.8rem; color: #64748b;"><i class="fa-solid fa-mobile-screen"></i> 100%
+                        Flexível</span>
+                </div>
+                <a href="https://wa.me/258834616193?text=Quais os cursos WhatsApp disponíveis?" target="_blank"
+                    class="btn-course" style="background: #65a30d;">Ver Catálogo</a>
+            </div>
+        </div>
+
+    </section>
+
+    <section id="panel-solucoes" class="content-section grid-services">
+
+        <div class="service-card">
+            <div class="service-content">
+                <i class="fa-solid fa-chess-knight srv-icon"></i>
+                <h3 class="srv-title">Consultoria Estratégica</h3>
+                <p class="srv-desc">Não importa a área da sua empresa. Analisamos o problema, desenhamos o processo e
+                    encontramos a solução ideal.</p>
+                <ul class="srv-list">
+                    <li><i class="fa-solid fa-check"></i> Diagnóstico Empresarial</li>
+                    <li><i class="fa-solid fa-check"></i> Otimização de Processos</li>
+                    <li><i class="fa-solid fa-check"></i> Assessoria de Gestão</li>
+                </ul>
+                <a href="https://wa.me/258834616193?text=Preciso de uma consultoria para o meu negócio." target="_blank"
+                    class="btn-solucao">Agendar Diagnóstico</a>
+            </div>
+        </div>
+
+        <div class="service-card" style="background: linear-gradient(145deg, #1e293b, #0f172a);">
+            <div class="service-content">
+                <i class="fa-solid fa-lightbulb srv-icon" style="color: #22d3ee;"></i>
+                <h3 class="srv-title">Criação de Produtos</h3>
+                <p class="srv-desc">Tem uma ideia? Nós transformamo-la num produto real. Desde a conceção, protótipo até
+                    ao lançamento.</p>
+                <ul class="srv-list">
+                    <li><i class="fa-solid fa-check"></i> Design de Serviços</li>
+                    <li><i class="fa-solid fa-check"></i> Criação de Apps/Sistemas</li>
+                    <li><i class="fa-solid fa-check"></i> Lançamento de Projectos</li>
+                </ul>
+                <a href="https://wa.me/258834616193?text=Tenho uma ideia de projeto e quero tirar do papel."
+                    target="_blank" class="btn-solucao" style="border-color: #22d3ee; color: #22d3ee;">Iniciar
+                    Projeto</a>
+            </div>
+        </div>
+
+        <div class="service-card" style="background: #fff; color: var(--brand-dark); border: 1px solid #e2e8f0;">
+            <div class="service-content">
+                <i class="fa-solid fa-puzzle-piece srv-icon" style="color: var(--brand-dark);"></i>
+                <h3 class="srv-title">Resolução de Problemas</h3>
+                <p class="srv-desc" style="color: #64748b;">Tem um problema complexo? Eu trago a solução. Seja técnica,
+                    operacional ou humana.</p>
+                <ul class="srv-list">
+                    <li style="color: #475569;"><i class="fa-solid fa-arrow-right"
+                            style="color: var(--brand-dark);"></i> Tem um gargalo na empresa?</li>
+                    <li style="color: #475569;"><i class="fa-solid fa-arrow-right"
+                            style="color: var(--brand-dark);"></i> Precisa de organizar dados?</li>
+                    <li style="color: #475569;"><i class="fa-solid fa-arrow-right"
+                            style="color: var(--brand-dark);"></i> Equipa desmotivada?</li>
+                </ul>
+                <a href="https://wa.me/258834616193?text=Tenho um problema específico para resolver." target="_blank"
+                    class="btn-solucao" style="background: var(--brand-dark); color: white; border: none;">Falar com
+                    Solucionador</a>
+            </div>
+        </div>
+
+    </section>
+
+    <footer>
+        <p>© 2026 Carpintaria Digital • Criamos Soluções, Desenvolvemos Pessoas.</p>
+    </footer>
+
+    <script>
+        function switchMode(mode) {
+            // 1. Botões: Reset e Ativar
+            document.querySelectorAll('.switch-btn').forEach(btn => btn.classList.remove('active'));
+            document.querySelector(`.switch-btn[onclick*="${mode}"]`).classList.add('active');
+
+            // 2. Painéis: Esconder todos
+            document.querySelectorAll('.content-section').forEach(sec => {
+                sec.classList.remove('active');
+                sec.style.display = 'none';
+            });
+
+            // 3. Painel Alvo: Mostrar
+            const target = document.getElementById('panel-' + mode);
+            if (target) {
+                target.style.display = 'grid';
+                setTimeout(() => target.classList.add('active'), 10);
+            }
+
+            // 4. Texto do Hero (Narrativa)
+            const title = document.getElementById('heroTitle');
+            const desc = document.getElementById('heroDesc');
+
+            if (mode === 'edu') {
+                title.innerHTML = 'Potencial <span style="color:var(--brand-edu); font-style:italic;">Humano</span>';
+                desc.innerText = "Treinamento, Coaching e Cursos para elevar o nível da sua carreira e da sua equipa.";
+            } else {
+                title.innerHTML = 'Fábrica de <span style="color:var(--brand-gold); font-style:italic;">Soluções</span>';
+                desc.innerText = "Consultoria estratégica, criação de produtos e gestão de projetos. Do problema à resolution.";
+            }
+        }
+
+        // PWA
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('/sw.js');
+            });
+        }
+    </script>
+
+</body>
+
+</html>

@@ -1,3 +1,30 @@
-.streamlit/secrets.toml
+# Python
 __pycache__/
-banco_vetorial_chroma/
+*.py[cod]
+*$py.class
+.venv/
+venv/
+ENV/
+.env
+
+# Database and Logs
+*.db
+server.log
+script_content.js
+nohup.out
+
+# IDEs
+.vscode/
+.idea/
+
+# OS
+.DS_Store
+
+# Project specific
+_archive/
+documentos_consultoria/
+data/
+.streamlit/
+static/assets/images/LOGO-*.png
+static/assets/images/*.png
+static/images/*.png

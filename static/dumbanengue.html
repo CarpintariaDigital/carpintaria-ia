@@ -439,7 +439,11 @@
                 const req = await fetch('/api/chat', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ mensagem: txt })
+                    body: JSON.stringify({
+                        mensagem: txt,
+                        agente: 'sac',
+                        provider: 'auto'
+                    })
                 });
                 const res = await req.json();
 

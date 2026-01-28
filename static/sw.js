@@ -1,4 +1,4 @@
-const CACHE_NAME = 'carpintaria-os-v4.4';
+const CACHE_NAME = 'carpintaria-os-v4.5';
 const ASSETS_TO_CACHE = [
     '/',
     '/store',

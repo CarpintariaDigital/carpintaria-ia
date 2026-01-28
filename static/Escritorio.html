@@ -3,17 +3,35 @@
 
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes">
     <title>Carpintaria Digital | Bancada Mestre</title>
+
+    <!-- Cache Buster Script -->
+    <script>
+        (function () {
+            const CURRENT_VERSION = 'v3.2';
+            const savedVersion = localStorage.getItem('app_version');
+            if (savedVersion !== CURRENT_VERSION) {
+                console.log('Nova versão detetada! Limpando cache...');
+                if ('serviceWorker' in navigator) {
+                    caches.keys().then(names => {
+                        for (let name of names) caches.delete(name);
+                    });
+                }
+                localStorage.setItem('app_version', CURRENT_VERSION);
+                // Não forçamos reload imediato para evitar loops, mas o próximo load será limpo
+            }
+        })();
+    </script>
 
     <link
         href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&family=Inter:wght@300;400;500;600&family=Fira+Code:wght@400;500&display=swap"
         rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <link rel="manifest" href="/static/manifest.json">
-    <link rel="icon" type="image/png" href="/static/images/logo-192.png">
+    <link rel="icon" type="image/png" href="/static/images/logo-dark-bg.png">
     <meta name="theme-color" content="#d4af37">
-    <link rel="stylesheet" href="../assets/css/mobile.css">
+    <!-- Removido mobile.css conflituoso -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/ace/1.32.3/ace.js" type="text/javascript"
         charset="utf-8"></script>
 
@@ -245,6 +263,24 @@
             padding: 1.5rem;
             flex-shrink: 0;
             overflow-y: auto;
+            transition: transform 0.3s ease;
+            z-index: 1001;
+        }
+
+        /* Overlay para mobile */
+        .sidebar-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            display: none;
+            z-index: 1000;
+        }
+
+        .sidebar-overlay.active {
+            display: block;
         }
 
         .brand-box {
@@ -520,42 +556,91 @@
         @media (max-width: 768px) {
             body {
                 flex-direction: column;
-                height: auto;
                 overflow-y: auto;
+                height: auto;
             }
 
             .sidebar {
-                width: 100%;
-                height: auto;
-                padding: 10px;
-                flex-direction: row;
-                overflow-x: auto;
-                gap: 10px;
+                position: fixed;
+                left: 0;
+                top: 0;
+                height: 100vh;
+                transform: translateX(-100%);
+                box-shadow: 10px 0 30px rgba(0, 0, 0, 0.2);
             }
 
-            .sidebar .brand-box,
-            .sidebar .menu-label {
-                display: none;
+            .sidebar.active {
+                transform: translateX(0);
+            }
+
+            .sidebar .brand-box {
+                display: flex;
+                /* Mostrar na sidebar mobile */
+                margin-bottom: 2rem;
             }
 
             .nav-item {
-                font-size: 0.8rem;
-                padding: 8px 12px;
-                white-space: nowrap;
-                background: rgba(255, 255, 255, 0.05);
-                margin: 0;
+                font-size: 1rem;
+                padding: 15px;
+                margin-bottom: 8px;
             }
 
             .main-content {
                 width: 100%;
                 height: auto;
+                overflow-y: visible;
+            }
+
+            .top-header {
+                padding: 0 1rem;
+            }
+
+            .mobile-menu-btn {
+                display: flex !important;
+                align-items: center;
+                justify-content: center;
+                width: 40px;
+                height: 40px;
+                background: #f1f5f9;
+                border: none;
+                border-radius: 8px;
+                color: var(--navy-brand);
+                font-size: 1.2rem;
+                cursor: pointer;
             }
 
             .workspace {
                 padding: 1rem;
-                height: auto;
-                overflow: visible;
             }
+
+            .kpi-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .oficina-meta-fields {
+                flex-wrap: wrap;
+            }
+
+            .ia-controls-row {
+                flex-direction: column;
+                align-items: stretch !important;
+            }
+        }
+
+        @media (max-width: 480px) {
+
+            #connection-status span,
+            #ia-mode span {
+                display: none;
+            }
+
+            .page-title {
+                font-size: 1.1rem;
+            }
+        }
+
+        .mobile-menu-btn {
+            display: none;
         }
 
         /* --- ATELIÊ DE DESIGN --- */
@@ -736,10 +821,12 @@
 </head>
 
 <body>
+    <div class="sidebar-overlay" id="sidebar-overlay" onclick="toggleMobileMenu()"></div>
 
     <aside class="sidebar">
         <div class="brand-box">
-            <img src="/static/images/logo-192.png" alt="Logo" style="width: 40px; height: 40px; border-radius: 8px;">
+            <img src="assets/images/Logo-carpintaria.svg" alt="Logo"
+                style="width: 40px; height: 40px; border-radius: 8px;">
             <div>
                 <div style="font-weight: 700; letter-spacing: 1px;">CARPINTARIA</div>
                 <div style="font-size: 0.65rem; opacity: 0.6;">SISTEMA SOBERANO</div>
@@ -786,14 +873,17 @@
 
     <main class="main-content">
         <header class="top-header">
+            <button class="mobile-menu-btn" onclick="toggleMobileMenu()">
+                <i class="fa-solid fa-bars"></i>
+            </button>
             <div class="page-title" id="headerTitle">Visão Geral</div>
             <div id="connection-status"
                 style="font-size: 0.75rem; padding: 4px 12px; border-radius: 20px; background: #e2e8f0; color: #64748b; font-weight: 700;">
-                <i class="fa-solid fa-cloud"></i> ONLINE
+                <i class="fa-solid fa-cloud"></i> <span>ONLINE</span>
             </div>
             <div id="ia-mode" onclick="toggleIAMode()"
                 style="cursor:pointer; font-size: 0.75rem; padding: 4px 12px; border-radius: 20px; background: #fef3c7; color: #92400e; font-weight: 700; margin-left: 10px;">
-                <i class="fa-solid fa-server"></i> CLOUD IA
+                <i class="fa-solid fa-server"></i> <span>CLOUD IA</span>
             </div>
             <div style="display:flex; align-items:center; gap:15px;">
                 <button onclick="configurarChave()"
@@ -995,8 +1085,8 @@
                     </div>
                 </div>
 
-                <div
-                    style="display:flex; gap:20px; margin-bottom:1.5rem; align-items:center; background:#f8fafc; padding:15px; border-radius:12px; border:1px solid #e2e8f0;">
+                <div class="ia-controls-row"
+                    style="display:flex; gap:20px; margin-bottom:1.5rem; align-items:center; background:#f8fafc; padding:15px; border-radius:12px; border:1px solid #e2e8f0; flex-wrap: wrap;">
                     <div style="flex:1;">
                         <label
                             style="color: var(--text-muted); font-size: 0.8rem; display:block; margin-bottom:5px;">Criatividade
@@ -1641,12 +1731,28 @@
     </div>
 
     <script>
+        // SISTEMA DE NAVEGAÇÃO MOBILE
+        function toggleMobileMenu() {
+            const sidebar = document.querySelector('.sidebar');
+            const overlay = document.getElementById('sidebar-overlay');
+            sidebar.classList.toggle('active');
+            overlay.classList.toggle('active');
+        }
+
+        // Fecha menu mobile ao clicar num item
+        document.querySelectorAll('.sidebar .nav-item').forEach(item => {
+            item.addEventListener('click', () => {
+                if (window.innerWidth <= 768) {
+                    toggleMobileMenu();
+                }
+            });
+        });
+
         // AUTENTICAÇÃO - TEMPORARIAMENTE DESABILITADA PARA TESTE
         let authToken = null;
 
         async function verificarAuth() {
             console.log("Autenticação temporariamente desabilitada para teste");
-            // Sempre retorna true para permitir acesso
             return true;
         }
 
@@ -1658,6 +1764,9 @@
 
                 // Lazy load para outras seções quando clicadas
                 setupLazyLoading();
+
+                // Carregar chaves de IA no início
+                loadIAKey();
             }
         });
 
@@ -1882,8 +1991,8 @@
             const words = text.split(' ');
             let line = '', ty = y + 30;
             for (let n = 0; n < words.length; n++) {
-                let testLine = line + words[n] + ' ';
-                if (animCtx.measureText(testLine).width > w - 40 && n > 0) {
+                let testLine = line + words[n] + ' '; if
+                    (animCtx.measureText(testLine).width > w - 40 && n > 0) {
                     animCtx.fillText(line, x + 20, ty);
                     line = words[n] + ' ';
                     ty += 24;
@@ -1954,7 +2063,11 @@
 
             showToast("🎨 Mestre a pintar... aguarda um momento.");
             const gallery = document.getElementById('image-gallery');
-            gallery.innerHTML = '<div style="text-align:center; grid-column: 1/-1;"><i class="fa-solid fa-spinner fa-spin" style="font-size:3rem; color:var(--gold);"></i><p style="margin-top:10px;">Forjando a tua visão...</p></div>';
+            gallery.innerHTML = `
+                <div style="text-align:center; grid-column: 1/-1;">
+                    <i class="fa-solid fa-spinner fa-spin" style="font-size:3rem; color:var(--gold);"></i>
+                    <p style="margin-top:10px;">Forjando a tua visão...</p>
+                </div>`;
 
             try {
                 // Aqui chamamos o backend para gerar via AI (Ollama ou Cloud)
@@ -1967,13 +2080,14 @@
 
                 if (data.url) {
                     gallery.innerHTML = `
-                        <div class="gallery-item">
-                            <img src="${data.url}" alt="Gerado pela Carpintaria">
-                            <div style="position:absolute; bottom:0; left:0; right:0; background:rgba(0,0,0,0.7); color:white; padding:5px; font-size:0.7rem; text-align:center;">
-                                ${prompt.substring(0, 20)}...
-                            </div>
-                        </div>
-                    `;
+            <div class="gallery-item">
+                <img src="${data.url}" alt="Gerado pela Carpintaria">
+                <div
+                    style="position:absolute; bottom:0; left:0; right:0; background:rgba(0,0,0,0.7); color:white; padding:5px; font-size:0.7rem; text-align:center;">
+                    ${prompt.substring(0, 20)}...
+                </div>
+            </div>
+            `;
                     showToast("✨ Obra terminada!");
                 } else {
                     showToast("❌ Falha na geração.");
@@ -1998,12 +2112,12 @@
             if (msg.includes("🎨")) icon = "fa-palette";
 
             notif.innerHTML = `
-                <i class="fa-solid ${icon}"></i>
-                <div class="notification-content">
-                    <div class="notification-title">${title}</div>
-                    <div class="notification-message">${msg.replace(/[✅❌⚠️📂🎨✨🖼️🤖]/g, '').trim()}</div>
-                </div>
-                <div class="notification-progress"></div>
+            <i class="fa-solid ${icon}"></i>
+            <div class="notification-content">
+                <div class="notification-title">${title}</div>
+                <div class="notification-message">${msg.replace(/[✅❌⚠️📂🎨✨🖼️🤖]/g, '').trim()}</div>
+            </div>
+            <div class="notification-progress"></div>
             `;
 
             container.appendChild(notif);
@@ -2122,15 +2236,18 @@
                 const color = c.tipo === 'CLIENTE' ? '#047857' : '#b45309';
                 const bg = c.tipo === 'CLIENTE' ? '#ecfdf5' : '#fffbeb';
                 tbody.innerHTML += `
-                    <tr style="border-bottom:1px solid #eee;">
-                        <td style="padding:15px; font-weight:600;">${c.nome}</td>
-                        <td style="padding:15px;"><span style="background:${bg}; color:${color}; padding:4px 8px; border-radius:4px; font-size:0.6rem; font-weight:bold;">${c.tipo}</span></td>
-                        <td style="padding:15px;">${c.telefone || ''}</td>
-                        <td style="padding:15px; text-align:right;">
-                            <button class="btn-trash" onclick="apagarContacto(${c.id})"><i class="fa-solid fa-trash"></i></button>
-                        </td>
-                    </tr>
-                `;
+            <tr style="border-bottom:1px solid #eee;">
+                <td style="padding:15px; font-weight:600;">${c.nome}</td>
+                <td style="padding:15px;"><span
+                        style="background:${bg}; color:${color}; padding:4px 8px; border-radius:4px; font-size:0.6rem; font-weight:bold;">${c.tipo}</span>
+                </td>
+                <td style="padding:15px;">${c.telefone || ''}</td>
+                <td style="padding:15px; text-align:right;">
+                    <button class="btn-trash" onclick="apagarContacto(${c.id})"><i
+                            class="fa-solid fa-trash"></i></button>
+                </td>
+            </tr>
+            `;
             });
         }
 
@@ -2222,11 +2339,20 @@
             // Capturar metadata
             let meta = {};
             if (catValue === 'app') {
-                meta = { repo: document.getElementById('app-repo').value, stack: document.getElementById('app-stack').value, pwa: document.getElementById('app-pwa').checked };
+                meta = {
+                    repo: document.getElementById('app-repo').value, stack: document.getElementById('app-stack').value,
+                    pwa: document.getElementById('app-pwa').checked
+                };
             } else if (catValue === 'prod') {
-                meta = { preco: document.getElementById('prod-preco').value, stock: document.getElementById('prod-stock').value, tag: document.getElementById('prod-tag').value };
+                meta = {
+                    preco: document.getElementById('prod-preco').value, stock:
+                        document.getElementById('prod-stock').value, tag: document.getElementById('prod-tag').value
+                };
             } else if (catValue === 'cli') {
-                meta = { cliente: document.getElementById('cli-nome').value, prazo: document.getElementById('cli-prazo').value, entrega: document.getElementById('cli-entrega').value };
+                meta = {
+                    cliente: document.getElementById('cli-nome').value, prazo:
+                        document.getElementById('cli-prazo').value, entrega: document.getElementById('cli-entrega').value
+                };
             }
 
             const res = await fetch('/api/docs/guardar', {
@@ -2329,26 +2455,29 @@
                     const statusText = f.status === 'paga' ? 'Paga' : 'Pendente';
 
                     tbody.innerHTML += `
-                        <tr style="border-bottom:1px solid #eee;">
-                            <td style="padding:15px; font-weight:600;">${f.numero}</td>
-                            <td style="padding:15px;">${f.cliente_nome}</td>
-                            <td style="padding:15px;">${f.total.toFixed(2)} MT</td>
-                            <td style="padding:15px;">
-                                <span style="background:${statusColor}20; color:${statusColor}; padding:4px 8px; border-radius:4px; font-size:0.8rem;">
-                                    ${statusText}
-                                </span>
-                            </td>
-                            <td style="padding:15px;">${new Date(f.data_emissao).toLocaleDateString('pt-BR')}</td>
-                            <td style="padding:15px; text-align:right;">
-                                <button onclick="verFatura(${f.id})" style="background:#3b82f6; color:white; border:none; padding:5px 10px; border-radius:4px; cursor:pointer; margin-right:5px;">
-                                    <i class="fa-solid fa-eye"></i>
-                                </button>
-                                <button onclick="baixarPDF(${f.id})" style="background:#10b981; color:white; border:none; padding:5px 10px; border-radius:4px; cursor:pointer;">
-                                    <i class="fa-solid fa-download"></i>
-                                </button>
-                            </td>
-                        </tr>
-                    `;
+            <tr style="border-bottom:1px solid #eee;">
+                <td style="padding:15px; font-weight:600;">${f.numero}</td>
+                <td style="padding:15px;">${f.cliente_nome}</td>
+                <td style="padding:15px;">${f.total.toFixed(2)} MT</td>
+                <td style="padding:15px;">
+                    <span
+                        style="background:${statusColor}20; color:${statusColor}; padding:4px 8px; border-radius:4px; font-size:0.8rem;">
+                        ${statusText}
+                    </span>
+                </td>
+                <td style="padding:15px;">${new Date(f.data_emissao).toLocaleDateString('pt-BR')}</td>
+                <td style="padding:15px; text-align:right;">
+                    <button onclick="verFatura(${f.id})"
+                        style="background:#3b82f6; color:white; border:none; padding:5px 10px; border-radius:4px; cursor:pointer; margin-right:5px;">
+                        <i class="fa-solid fa-eye"></i>
+                    </button>
+                    <button onclick="baixarPDF(${f.id})"
+                        style="background:#10b981; color:white; border:none; padding:5px 10px; border-radius:4px; cursor:pointer;">
+                        <i class="fa-solid fa-download"></i>
+                    </button>
+                </td>
+            </tr>
+            `;
                 });
 
             } catch (e) {
@@ -2403,25 +2532,28 @@
                     const convitesData = await convitesRes.json();
 
                     tbody.innerHTML += `
-                        <tr style="border-bottom:1px solid #eee;">
-                            <td style="padding:15px; font-weight:600;">${evento.titulo}</td>
-                            <td style="padding:15px;">${new Date(evento.data_evento).toLocaleDateString('pt-BR')}</td>
-                            <td style="padding:15px;">
-                                <span style="background:#d4af3720; color:#d4af37; padding:4px 8px; border-radius:4px; font-size:0.8rem;">
-                                    ${evento.tipo}
-                                </span>
-                            </td>
-                            <td style="padding:15px;">${convitesData.convites.length}</td>
-                            <td style="padding:15px; text-align:right;">
-                                <button onclick="verEvento(${evento.id})" style="background:#3b82f6; color:white; border:none; padding:5px 10px; border-radius:4px; cursor:pointer; margin-right:5px;">
-                                    <i class="fa-solid fa-eye"></i>
-                                </button>
-                                <button onclick="gerarConviteEvento(${evento.id})" style="background:#10b981; color:white; border:none; padding:5px 10px; border-radius:4px; cursor:pointer;">
-                                    <i class="fa-solid fa-qrcode"></i>
-                                </button>
-                            </td>
-                        </tr>
-                    `;
+            <tr style="border-bottom:1px solid #eee;">
+                <td style="padding:15px; font-weight:600;">${evento.titulo}</td>
+                <td style="padding:15px;">${new Date(evento.data_evento).toLocaleDateString('pt-BR')}</td>
+                <td style="padding:15px;">
+                    <span
+                        style="background:#d4af3720; color:#d4af37; padding:4px 8px; border-radius:4px; font-size:0.8rem;">
+                        ${evento.tipo}
+                    </span>
+                </td>
+                <td style="padding:15px;">${convitesData.convites.length}</td>
+                <td style="padding:15px; text-align:right;">
+                    <button onclick="verEvento(${evento.id})"
+                        style="background:#3b82f6; color:white; border:none; padding:5px 10px; border-radius:4px; cursor:pointer; margin-right:5px;">
+                        <i class="fa-solid fa-eye"></i>
+                    </button>
+                    <button onclick="gerarConviteEvento(${evento.id})"
+                        style="background:#10b981; color:white; border:none; padding:5px 10px; border-radius:4px; cursor:pointer;">
+                        <i class="fa-solid fa-qrcode"></i>
+                    </button>
+                </td>
+            </tr>
+            `;
                 });
 
             } catch (e) {
@@ -2504,29 +2636,33 @@
                     const statusText = anuncio.status === 'ativo' ? 'Ativo' : 'Pausado';
 
                     tbody.innerHTML += `
-                        <tr style="border-bottom:1px solid #eee;">
-                            <td style="padding:15px; font-weight:600;">${anuncio.titulo}</td>
-                            <td style="padding:15px;">
-                                <span style="background:#D4A37320; color:#D4A373; padding:4px 8px; border-radius:4px; font-size:0.8rem;">
-                                    ${anuncio.categoria}
-                                </span>
-                            </td>
-                            <td style="padding:15px;">
-                                <span style="background:${statusColor}20; color:${statusColor}; padding:4px 8px; border-radius:4px; font-size:0.8rem;">
-                                    ${statusText}
-                                </span>
-                            </td>
-                            <td style="padding:15px;">${anuncio.visualizacoes || 0}</td>
-                            <td style="padding:15px; text-align:right;">
-                                <button onclick="verAnuncio(${anuncio.id})" style="background:#3b82f6; color:white; border:none; padding:5px 10px; border-radius:4px; cursor:pointer; margin-right:5px;">
-                                    <i class="fa-solid fa-eye"></i>
-                                </button>
-                                <button onclick="editarAnuncio(${anuncio.id})" style="background:#f59e0b; color:white; border:none; padding:5px 10px; border-radius:4px; cursor:pointer;">
-                                    <i class="fa-solid fa-edit"></i>
-                                </button>
-                            </td>
-                        </tr>
-                    `;
+            <tr style="border-bottom:1px solid #eee;">
+                <td style="padding:15px; font-weight:600;">${anuncio.titulo}</td>
+                <td style="padding:15px;">
+                    <span
+                        style="background:#D4A37320; color:#D4A373; padding:4px 8px; border-radius:4px; font-size:0.8rem;">
+                        ${anuncio.categoria}
+                    </span>
+                </td>
+                <td style="padding:15px;">
+                    <span
+                        style="background:${statusColor}20; color:${statusColor}; padding:4px 8px; border-radius:4px; font-size:0.8rem;">
+                        ${statusText}
+                    </span>
+                </td>
+                <td style="padding:15px;">${anuncio.visualizacoes || 0}</td>
+                <td style="padding:15px; text-align:right;">
+                    <button onclick="verAnuncio(${anuncio.id})"
+                        style="background:#3b82f6; color:white; border:none; padding:5px 10px; border-radius:4px; cursor:pointer; margin-right:5px;">
+                        <i class="fa-solid fa-eye"></i>
+                    </button>
+                    <button onclick="editarAnuncio(${anuncio.id})"
+                        style="background:#f59e0b; color:white; border:none; padding:5px 10px; border-radius:4px; cursor:pointer;">
+                        <i class="fa-solid fa-edit"></i>
+                    </button>
+                </td>
+            </tr>
+            `;
                 });
 
             } catch (e) {
@@ -2563,7 +2699,8 @@
 
                 // Atualizar KPIs
                 document.getElementById('estabelecimentos-total').textContent = stats.total_estabelecimentos || 0;
-                document.getElementById('estabelecimentos-ativos').textContent = estabelecimentosData.estabelecimentos.length;
+                document.getElementById('estabelecimentos-ativos').textContent =
+                    estabelecimentosData.estabelecimentos.length;
                 document.getElementById('agendamentos-ativos').textContent = stats.agendamentos_ativos || 0;
                 document.getElementById('agendamentos-hoje').textContent = stats.agendamentos_hoje || 0;
 
@@ -2577,29 +2714,33 @@
                     const emergenciaIcon = estabelecimento.emergencia ? ' <i class="fa-solid fa-ambulance" style="color:#ef4444;"></i>' : '';
 
                     tbody.innerHTML += `
-                        <tr style="border-bottom:1px solid #eee;">
-                            <td style="padding:15px; font-weight:600;">${estabelecimento.nome}${emergenciaIcon}</td>
-                            <td style="padding:15px;">
-                                <span style="background:#0ea5e920; color:#0ea5e9; padding:4px 8px; border-radius:4px; font-size:0.8rem;">
-                                    ${estabelecimento.tipo}
-                                </span>
-                            </td>
-                            <td style="padding:15px;">${estabelecimento.endereco || 'N/A'}</td>
-                            <td style="padding:15px;">
-                                <span style="background:${statusColor}20; color:${statusColor}; padding:4px 8px; border-radius:4px; font-size:0.8rem;">
-                                    ${statusText}
-                                </span>
-                            </td>
-                            <td style="padding:15px; text-align:right;">
-                                <button onclick="verEstabelecimento(${estabelecimento.id})" style="background:#3b82f6; color:white; border:none; padding:5px 10px; border-radius:4px; cursor:pointer; margin-right:5px;">
-                                    <i class="fa-solid fa-eye"></i>
-                                </button>
-                                <button onclick="agendarConsulta(${estabelecimento.id})" style="background:#10b981; color:white; border:none; padding:5px 10px; border-radius:4px; cursor:pointer;">
-                                    <i class="fa-solid fa-calendar-plus"></i>
-                                </button>
-                            </td>
-                        </tr>
-                    `;
+            <tr style="border-bottom:1px solid #eee;">
+                <td style="padding:15px; font-weight:600;">${estabelecimento.nome}${emergenciaIcon}</td>
+                <td style="padding:15px;">
+                    <span
+                        style="background:#0ea5e920; color:#0ea5e9; padding:4px 8px; border-radius:4px; font-size:0.8rem;">
+                        ${estabelecimento.tipo}
+                    </span>
+                </td>
+                <td style="padding:15px;">${estabelecimento.endereco || 'N/A'}</td>
+                <td style="padding:15px;">
+                    <span
+                        style="background:${statusColor}20; color:${statusColor}; padding:4px 8px; border-radius:4px; font-size:0.8rem;">
+                        ${statusText}
+                    </span>
+                </td>
+                <td style="padding:15px; text-align:right;">
+                    <button onclick="verEstabelecimento(${estabelecimento.id})"
+                        style="background:#3b82f6; color:white; border:none; padding:5px 10px; border-radius:4px; cursor:pointer; margin-right:5px;">
+                        <i class="fa-solid fa-eye"></i>
+                    </button>
+                    <button onclick="agendarConsulta(${estabelecimento.id})"
+                        style="background:#10b981; color:white; border:none; padding:5px 10px; border-radius:4px; cursor:pointer;">
+                        <i class="fa-solid fa-calendar-plus"></i>
+                    </button>
+                </td>
+            </tr>
+            `;
                 });
 
             } catch (e) {
@@ -2686,25 +2827,28 @@
                         curso.tipo_participante === 'empresa' ? 'Empresa' : 'Equipe';
 
                     tbodyCursos.innerHTML += `
-                        <tr style="border-bottom:1px solid #eee;">
-                            <td style="padding:15px; font-weight:600;">${curso.titulo}</td>
-                            <td style="padding:15px;">
-                                <span style="background:${categoriaColor}20; color:${categoriaColor}; padding:4px 8px; border-radius:4px; font-size:0.8rem;">
-                                    ${curso.categoria.replace('_', ' ')}
-                                </span>
-                            </td>
-                            <td style="padding:15px;">${participantes}</td>
-                            <td style="padding:15px;">${curso.preco ? curso.preco.toLocaleString() + ' MT' : 'Grátis'}</td>
-                            <td style="padding:15px; text-align:right;">
-                                <button onclick="verCurso(${curso.id})" style="background:#3b82f6; color:white; border:none; padding:5px 10px; border-radius:4px; cursor:pointer; margin-right:5px;">
-                                    <i class="fa-solid fa-eye"></i>
-                                </button>
-                                <button onclick="inscreverParticipante(${curso.id})" style="background:#10b981; color:white; border:none; padding:5px 10px; border-radius:4px; cursor:pointer;">
-                                    <i class="fa-solid fa-user-plus"></i>
-                                </button>
-                            </td>
-                        </tr>
-                    `;
+            <tr style="border-bottom:1px solid #eee;">
+                <td style="padding:15px; font-weight:600;">${curso.titulo}</td>
+                <td style="padding:15px;">
+                    <span
+                        style="background:${categoriaColor}20; color:${categoriaColor}; padding:4px 8px; border-radius:4px; font-size:0.8rem;">
+                        ${curso.categoria.replace('_', ' ')}
+                    </span>
+                </td>
+                <td style="padding:15px;">${participantes}</td>
+                <td style="padding:15px;">${curso.preco ? curso.preco.toLocaleString() + ' MT' : 'Grátis'}</td>
+                <td style="padding:15px; text-align:right;">
+                    <button onclick="verCurso(${curso.id})"
+                        style="background:#3b82f6; color:white; border:none; padding:5px 10px; border-radius:4px; cursor:pointer; margin-right:5px;">
+                        <i class="fa-solid fa-eye"></i>
+                    </button>
+                    <button onclick="inscreverParticipante(${curso.id})"
+                        style="background:#10b981; color:white; border:none; padding:5px 10px; border-radius:4px; cursor:pointer;">
+                        <i class="fa-solid fa-user-plus"></i>
+                    </button>
+                </td>
+            </tr>
+            `;
                 });
 
                 // Carregar consultorias
@@ -2720,27 +2864,30 @@
                         consultoria.tipo === 'projeto' ? 'Projeto' : 'Resolução';
 
                     tbodyConsultorias.innerHTML += `
-                        <tr style="border-bottom:1px solid #eee;">
-                            <td style="padding:15px; font-weight:600;">${consultoria.titulo}</td>
-                            <td style="padding:15px;">${consultoria.cliente_nome}</td>
-                            <td style="padding:15px;">
-                                <span style="background:#9f123920; color:#9f1239; padding:4px 8px; border-radius:4px; font-size:0.8rem;">
-                                    ${tipoLabel}
-                                </span>
-                            </td>
-                            <td style="padding:15px;">
-                                <span style="background:${statusColor}20; color:${statusColor}; padding:4px 8px; border-radius:4px; font-size:0.8rem;">
-                                    ${consultoria.status}
-                                </span>
-                            </td>
-                            <td style="padding:15px;">${consultoria.valor_proposto ? consultoria.valor_proposto.toLocaleString() + ' MT' : 'A definir'}</td>
-                            <td style="padding:15px; text-align:right;">
-                                <button onclick="verConsultoria(${consultoria.id})" style="background:#3b82f6; color:white; border:none; padding:5px 10px; border-radius:4px; cursor:pointer;">
-                                    <i class="fa-solid fa-eye"></i>
-                                </button>
-                            </td>
-                        </tr>
-                    `;
+            <tr style="border-bottom:1px solid #eee;">
+                <td style="padding:15px; font-weight:600;">${consultoria.titulo}</td>
+                <td style="padding:15px;">${consultoria.cliente_nome}</td>
+                <td style="padding:15px;">
+                    <span
+                        style="background:#9f123920; color:#9f1239; padding:4px 8px; border-radius:4px; font-size:0.8rem;">
+                        ${tipoLabel}
+                    </span>
+                </td>
+                <td style="padding:15px;">
+                    <span
+                        style="background:${statusColor}20; color:${statusColor}; padding:4px 8px; border-radius:4px; font-size:0.8rem;">
+                        ${consultoria.status}
+                    </span>
+                </td>
+                <td style="padding:15px;">${consultoria.valor_proposto ? consultoria.valor_proposto.toLocaleString() + ' MT' : 'A definir'}</td>
+                <td style="padding:15px; text-align:right;">
+                    <button onclick="verConsultoria(${consultoria.id})"
+                        style="background:#3b82f6; color:white; border:none; padding:5px 10px; border-radius:4px; cursor:pointer;">
+                        <i class="fa-solid fa-eye"></i>
+                    </button>
+                </td>
+            </tr>
+                        `;
                 });
 
             } catch (e) {
@@ -2901,7 +3048,7 @@
 
             try {
                 // TEMPORARIAMENTE SEM AUTENTICAÇÃO PARA TESTE
-                const res = await fetch(`/api/dashboard/stats`);
+                const res = await fetch(`/ api / dashboard / stats`);
                 const stats = await res.json();
 
                 if (stats.error) {
@@ -2926,7 +3073,7 @@
         async function carregarBackupStats() {
             try {
                 const res = await fetch('/api/backup/stats', {
-                    headers: { 'Authorization': `Bearer ${authToken}` }
+                    headers: { 'Authorization': `Bearer ${authToken} ` }
                 });
                 const stats = await res.json();
 
@@ -2947,7 +3094,7 @@
             try {
                 const res = await fetch('/api/backup/run', {
                     method: 'POST',
-                    headers: { 'Authorization': `Bearer ${authToken}` }
+                    headers: { 'Authorization': `Bearer ${authToken} ` }
                 });
                 const result = await res.json();
 
@@ -2983,52 +3130,52 @@
                 modelSelect.innerHTML = '';
                 if (provider === 'gemini') {
                     modelSelect.innerHTML = `
-                        <option value="gemini-2.5-flash">⭐ [GOOGLE] gemini-2.5-flash</option>
-                        <option value="gemini-2.5-pro">⭐ [GOOGLE] gemini-2.5-pro</option>
-                        <option value="gemini-2.0-flash">⭐ [GOOGLE] gemini-2.0-flash</option>
-                        <option value="gemini-2.0-flash-lite">⭐ [GOOGLE] gemini-2.0-flash-lite</option>
-                        <option value="gemini-exp-1206">⭐ [GOOGLE] gemini-exp-1206</option>
-                        <option value="gemma-3-27b-it">⭐ [GOOGLE] gemma-3-27b-it</option>
-                        <option value="deep-research-pro-preview-12-2025">⭐ [GOOGLE] deep-research (Preview)</option>
-                        <option value="custom">-- Modelo Personalizado --</option>
+                        < option value = "gemini-2.5-flash" >⭐[GOOGLE] gemini - 2.5 - flash</option >
+            <option value="gemini-2.5-pro">⭐ [GOOGLE] gemini-2.5-pro</option>
+            <option value="gemini-2.0-flash">⭐ [GOOGLE] gemini-2.0-flash</option>
+            <option value="gemini-2.0-flash-lite">⭐ [GOOGLE] gemini-2.0-flash-lite</option>
+            <option value="gemini-exp-1206">⭐ [GOOGLE] gemini-exp-1206</option>
+            <option value="gemma-3-27b-it">⭐ [GOOGLE] gemma-3-27b-it</option>
+            <option value="deep-research-pro-preview-12-2025">⭐ [GOOGLE] deep-research (Preview)</option>
+            <option value="custom">-- Modelo Personalizado --</option>
                     `;
                 } else if (provider === 'groq') {
                     modelSelect.innerHTML = `
-                        <option value="llama-3.3-70b-versatile">⚡ [VELOZ] llama-3.3-70b</option>
-                        <option value="llama-3.1-8b-instant">⚡ [VELOZ] llama-3.1-8b</option>
-                        <option value="mixtral-8x7b-32768">⚡ [VELOZ] mixtral-8x7b</option>
-                        <option value="llama-4-maverick-17b-128e-instruct">⚡ [VELOZ] llama-4-maverick</option>
-                        <option value="openai/gpt-oss-120b">⚡ [VELOZ] gpt-oss-120b</option>
-                        <option value="custom">-- Modelo Personalizado --</option>
+                        < option value = "llama-3.3-70b-versatile" >⚡[VELOZ] llama - 3.3 - 70b</option >
+            <option value="llama-3.1-8b-instant">⚡ [VELOZ] llama-3.1-8b</option>
+            <option value="mixtral-8x7b-32768">⚡ [VELOZ] mixtral-8x7b</option>
+            <option value="llama-4-maverick-17b-128e-instruct">⚡ [VELOZ] llama-4-maverick</option>
+            <option value="openai/gpt-oss-120b">⚡ [VELOZ] gpt-oss-120b</option>
+            <option value="custom">-- Modelo Personalizado --</option>
                     `;
                 } else if (provider === 'openrouter') {
                     modelSelect.innerHTML = `
-                        <option value="google/gemini-2.0-flash-exp:free">✅ [GRÁTIS] gemini-2.0-flash-exp</option>
-                        <option value="meta-llama/llama-3.3-70b-instruct:free">✅ [GRÁTIS] llama-3.3-70b</option>
-                        <option value="deepseek/deepseek-r1:free">✅ [GRÁTIS] deepseek-r1</option>
-                        <option value="qwen/qwen3-coder:free">✅ [GRÁTIS] qwen3-coder</option>
-                        <option value="mistralai/mistral-small-3.1-24b-instruct:free">✅ [GRÁTIS] mistral-small-3.1</option>
-                        <option value="liquid/lfm-2.5-1.2b-thinking:free">✅ [GRÁTIS] liquid-lfm-2.5 (Thinking)</option>
-                        <option value="deepseek/deepseek-v3.2">💰 [BARATO] deepseek-v3.2</option>
-                        <option value="custom">-- Modelo Personalizado --</option>
+                        < option value = "google/gemini-2.0-flash-exp:free" >✅[GRÁTIS] gemini - 2.0 - flash - exp</option >
+            <option value="meta-llama/llama-3.3-70b-instruct:free">✅ [GRÁTIS] llama-3.3-70b</option>
+            <option value="deepseek/deepseek-r1:free">✅ [GRÁTIS] deepseek-r1</option>
+            <option value="qwen/qwen3-coder:free">✅ [GRÁTIS] qwen3-coder</option>
+            <option value="mistralai/mistral-small-3.1-24b-instruct:free">✅ [GRÁTIS] mistral-small-3.1</option>
+            <option value="liquid/lfm-2.5-1.2b-thinking:free">✅ [GRÁTIS] liquid-lfm-2.5 (Thinking)</option>
+            <option value="deepseek/deepseek-v3.2">💰 [BARATO] deepseek-v3.2</option>
+            <option value="custom">-- Modelo Personalizado --</option>
                     `;
                 } else if (provider === 'huggingface') {
                     modelSelect.innerHTML = `
-                        <option value="meta-llama/Llama-3.2-3B-Instruct">Llama 3.2 3B (HF)</option>
-                        <option value="mistralai/Mistral-7B-Instruct-v0.3">Mistral 7B (HF)</option>
-                        <option value="google/gemma-2-2b-it">Gemma 2 2B (HF)</option>
-                        <option value="custom">-- Modelo Personalizado --</option>
+                        < option value = "meta-llama/Llama-3.2-3B-Instruct" > Llama 3.2 3B(HF)</option >
+            <option value="mistralai/Mistral-7B-Instruct-v0.3">Mistral 7B (HF)</option>
+            <option value="google/gemma-2-2b-it">Gemma 2 2B (HF)</option>
+            <option value="custom">-- Modelo Personalizado --</option>
                     `;
                 } else if (provider === 'local') {
                     modelSelect.innerHTML = `
-                        <option value="llama3.2">Llama 3.2 (Local)</option>
-                        <option value="qwen2.5-coder:3b">Qwen 2.5 Coder</option>
-                        <option value="custom">-- Modelo Personalizado --</option>
+                        < option value = "llama3.2" > Llama 3.2(Local)</option >
+            <option value="qwen2.5-coder:3b">Qwen 2.5 Coder</option>
+            <option value="custom">-- Modelo Personalizado --</option>
                     `;
                 } else {
                     modelSelect.innerHTML = `
-                        <option value="auto">Seleção Automática</option>
-                        <option value="custom">-- Modelo Personalizado --</option>
+                        < option value = "auto" > Seleção Automática</option >
+                            <option value="custom">-- Modelo Personalizado --</option>
                     `;
                 }
             }
@@ -3134,7 +3281,7 @@
                         const mName = m.name;
                         const card = document.createElement('div');
                         card.className = `model-card`;
-                        card.style = "font-size:0.75rem; padding:8px; display:flex; flex-direction:column; align-items:center; gap:5px; border:1px solid #ddd; border-radius:8px; cursor:pointer;";
+                        card.style = "font-size:0.75rem; padding:8px; display:flex; flex-direction:column; align-items:center; gap: 5px; border: 1px solid #ddd; border-radius: 8px; cursor: pointer; ";
                         card.onclick = () => selectOllamaModel(mName, card);
                         card.innerHTML = `<i class="fa-solid fa-box"></i> ${mName.split(':')[0]} <span style="font-size:0.6rem; opacity:0.7;">${(m.size / 1e9).toFixed(1)}GB</span>`;
                         list.appendChild(card);
@@ -3176,7 +3323,7 @@
 
         async function carregarSyncStats() {
             try {
-                const res = await fetch(`/api/sync/status?token=${authToken}`);
+                const res = await fetch(`/ api / sync / status ? token = ${authToken}`);
                 const stats = await res.json();
 
                 const onlineEl = document.getElementById('sync-online');
@@ -3231,7 +3378,8 @@
             showToast(`⚙️ Motor IA: ${modelId.toUpperCase()}`);
 
             const term = document.getElementById('terminal-output');
-            term.innerHTML += `<div style="margin-bottom:10px; color:var(--gold);">[SISTEMA]: Motor alterado para ${modelId.toUpperCase()} (Porta Local).</div>`;
+            term.innerHTML += `< div style = "margin-bottom:10px; color:var(--gold);" > [SISTEMA]: Motor alterado para
+                ${modelId.toUpperCase()}(Porta Local).</div > `;
             term.scrollTop = term.scrollHeight;
         }
 
@@ -3273,7 +3421,8 @@
                 const toolName = match[1];
                 const content = match[2];
 
-                term.innerHTML += `<div style="color:#fbbf24; font-size:0.8rem; margin:5px 0;">[Soberania] A executar ferramenta: ${toolName}...</div>`;
+                term.innerHTML += `< div style = "color:#fbbf24; font-size:0.8rem; margin:5px 0;" > [Soberania] A executar
+                ferramenta: ${toolName}...</div > `;
 
                 try {
                     let res, data;
@@ -3285,7 +3434,9 @@
                         });
                         data = await res.json();
                         const out = data.output || data.error;
-                        term.innerHTML += `<div style="background:#000; color:#4ade80; padding:5px; border-radius:4px; font-family:monospace; font-size:0.8rem; white-space:pre-wrap;">${out}</div>`;
+                        term.innerHTML += `< div
+                style = "background:#000; color:#4ade80; padding:5px; border-radius:4px; font-family:monospace; font-size:0.8rem; white-space:pre-wrap;" >
+                    ${out}</div > `;
                     } else if (toolName === 'WRITE_FILE') {
                         const [path, fileContent] = content.split('|||');
                         res = await fetch('/api/tools/write', {
@@ -3294,14 +3445,16 @@
                             body: JSON.stringify({ path, content: fileContent })
                         });
                         data = await res.json();
-                        term.innerHTML += `<div style="color:#4ade80; font-size:0.8rem;">✅ Ficheiro salvo: ${data.path}</div>`;
+                        term.innerHTML += `< div style = "color:#4ade80; font-size:0.8rem;" >✅ Ficheiro salvo: ${data.path}</div > `;
                     } else if (toolName === 'READ_FILE') {
-                        res = await fetch(`/api/tools/read/${content}`);
+                        res = await fetch(`/ api / tools / read / ${content}`);
                         data = await res.json();
-                        term.innerHTML += `<div style="background:#000; color:#ddd; padding:5px; border-radius:4px; font-family:monospace; font-size:0.8rem; white-space:pre-wrap;">${data.content || data.error}</div>`;
+                        term.innerHTML += `< div
+                style = "background:#000; color:#ddd; padding:5px; border-radius:4px; font-family:monospace; font-size:0.8rem; white-space:pre-wrap;" >
+                    ${data.content || data.error}</div > `;
                     }
                 } catch (e) {
-                    term.innerHTML += `<div style="color:#ef4444; font-size:0.8rem;">Erro na ferramenta: ${e.message}</div>`;
+                    term.innerHTML += `< div style = "color:#ef4444; font-size:0.8rem;" > Erro na ferramenta: ${e.message}</div > `;
                 }
                 term.scrollTop = term.scrollHeight;
             }
@@ -3319,10 +3472,12 @@
             if (!txt) return;
 
             let finalProvider = provider;
-            let finalModel = (provider === 'local') ? (selectedIAModel || 'llama3.2') : (selectedModel || 'gemini-1.5-flash');
+            let finalModel = (provider === 'local') ? (selectedIAModel || 'llama3.2') : (selectedModel ||
+                'gemini-1.5-flash');
             const modelSelect = document.getElementById('ia-model');
             if (modelSelect && provider !== 'auto') {
-                finalModel = (modelSelect.value === 'custom') ? document.getElementById('ia-model-custom').value : modelSelect.value;
+                finalModel = (modelSelect.value === 'custom') ? document.getElementById('ia-model-custom').value :
+                    modelSelect.value;
             }
 
             // --- Lógica de Roteamento Híbrido (Soberania) ---
@@ -3333,26 +3488,23 @@
                     showToast("🌐 Offline: Roteando para Ollama Local");
                 } else {
                     // Escolha Inteligente: Groq para velocidade/dev, Gemini para complexidade
-                    if (agente === 'dev' || txt.length < 250) {
-                        finalProvider = 'groq';
-                        finalModel = 'llama3-70b-8192';
-                    } else {
-                        finalProvider = 'gemini';
-                        finalModel = 'gemini-1.5-flash';
-                    }
-                    showToast(`🤖 Smart Routing: ${finalProvider.toUpperCase()}`);
+                    if (agente === 'dev' || txt.length < 250) { finalProvider = 'groq'; finalModel = 'llama3-70b-8192'; } else {
+                        finalProvider = 'gemini'; finalModel = 'gemini-1.5-flash';
+                    } showToast(`🤖 Smart Routing:
+                    ${finalProvider.toUpperCase()}`);
                 }
-            }
-
-            const term = document.getElementById('terminal-output');
-            term.innerHTML += `<div style="margin-bottom:5px; color:#ccc;">root@user:~$ ${txt}</div>`;
+            } const term = document.getElementById('terminal-output');
+            term.innerHTML += `< div style = "margin-bottom:5px; color:#ccc;" > root@user: ~$ ${txt}</div > `;
             input.value = '';
 
             // Agora tentamos o backend para TUDO, pois o backend lida com Ollama (local) ou simulação Cloud
             if (!navigator.onLine && finalProvider !== 'local') {
-                const resOffline = `[Offline]: O provedor ${finalProvider} exige internet. Muda para Ollama para soberania offline.`;
+                const resOffline = `[Offline]: O provedor ${finalProvider} exige internet.Muda para Ollama para
+                soberania offline.`;
                 setTimeout(() => {
-                    term.innerHTML += `<div style="margin-bottom:10px; color:#ef4444; border-bottom:1px solid #333; padding-bottom:5px;">${resOffline}</div>`;
+                    term.innerHTML += `< div
+                    style = "margin-bottom:10px; color:#ef4444; border-bottom:1px solid #333; padding-bottom:5px;" >
+                    ${resOffline}</div > `;
                     term.scrollTop = term.scrollHeight;
                 }, 500);
             } else {
@@ -3377,18 +3529,21 @@
                     document.getElementById('perf-latency').textContent = `${latency}ms`;
                     const tokens = data.tokens_eval_count || Math.round(data.resposta.length / 4);
                     const speed = (tokens / (latency / 1000)).toFixed(1);
-                    document.getElementById('perf-speed').textContent = `${speed} T/s`;
+                    document.getElementById('perf-speed').textContent = `${speed} T / s`;
                     document.getElementById('perf-tokens').textContent = tokens;
 
                     const agenteNome = data.agente || agente;
                     const modelUsed = data.model_used || finalProvider.toUpperCase();
-                    term.innerHTML += `<div style="margin-bottom:10px; color:#22d3ee; border-bottom:1px solid #333; padding-bottom:5px;">[${agenteNome} @ ${modelUsed}]: ${data.resposta}</div>`;
+                    term.innerHTML += `< div
+                    style = "margin-bottom:10px; color:#22d3ee; border-bottom:1px solid #333; padding-bottom:5px;" >
+                    [${agenteNome} @${modelUsed}]: ${data.resposta}</div > `;
 
                     // Dispara o loop de ferramentas se houver tags no output
                     processAgentialTools(data.resposta);
 
                 } catch (e) {
-                    term.innerHTML += `<div style="color:red; margin-bottom:10px;">Erro ao contactar o Mestre: ${e.message}</div>`;
+                    term.innerHTML += `< div style = "color:red; margin-bottom:10px;" > Erro ao contactar o Mestre: ${e.message}
+                </div > `;
                 }
             }
             term.scrollTop = term.scrollHeight;
@@ -3455,8 +3610,10 @@
         async function explicarTraducao() {
             const orig = document.getElementById('trans-input').value;
             const trans = document.getElementById('trans-output').value;
-            const from = document.getElementById('lang-from').options[document.getElementById('lang-from').selectedIndex].text;
-            const to = document.getElementById('lang-to').options[document.getElementById('lang-to').selectedIndex].text;
+            const from =
+                document.getElementById('lang-from').options[document.getElementById('lang-from').selectedIndex].text;
+            const to =
+                document.getElementById('lang-to').options[document.getElementById('lang-to').selectedIndex].text;
 
             if (!orig || !trans) return;
 
@@ -3466,7 +3623,8 @@
             expContent.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> O Agente de Linguagem está a analisar...';
 
             try {
-                const prompt = `Como Agente de Linguagem, explica a tradução de "${orig}" (${from}) para "${trans}" (${to}). Aborda a gramática, o contexto e se existe alguma nuance cultural ou pronúncia importante.`;
+                const prompt = `Como Agente de Linguagem, explica a tradução de "${orig}"(${from}) para "${trans}"
+                    (${to}).Aborda a gramática, o contexto e se existe alguma nuance cultural ou pronúncia importante.`;
 
                 const res = await fetch('/api/chat', {
                     method: 'POST',
@@ -3492,12 +3650,15 @@
             if (!txt) return;
 
             const msgs = document.getElementById('tutor-msgs');
-            msgs.innerHTML += `<div style="text-align:right; margin-bottom:10px;"><span style="background:var(--navy-brand); color:white; padding:8px 12px; border-radius:12px; display:inline-block;">${txt}</span></div>`;
+            msgs.innerHTML += `< div style = "text-align:right; margin-bottom:10px;" > <span
+                    style="background:var(--navy-brand); color:white; padding:8px 12px; border-radius:12px; display:inline-block;">${txt}</span>
+                </div > `;
             input.value = '';
 
             try {
                 const provider = document.getElementById('ia-provider').value;
-                const model = document.getElementById('ia-model') ? document.getElementById('ia-model').value : 'gemini-1.5-flash';
+                const model = document.getElementById('ia-model') ? document.getElementById('ia-model').value :
+                    'gemini-1.5-flash';
                 const apiKey = document.getElementById('ia-api-key').value;
 
                 const res = await fetch('/api/chat', {
@@ -3514,9 +3675,10 @@
                     })
                 });
                 const data = await res.json();
-                msgs.innerHTML += `<div style="background: white; padding: 10px; border-radius: 8px; border-left: 4px solid var(--gold); margin-bottom: 10px;">
+                msgs.innerHTML += `< div
+                    style = "background: white; padding: 10px; border-radius: 8px; border-left: 4px solid var(--gold); margin-bottom: 10px;" >
                     <strong>Tutor Forge:</strong> ${data.resposta}
-                </div>`;
+                </div > `;
                 msgs.scrollTop = msgs.scrollHeight;
             } catch (e) {
                 showToast("❌ Erro ao consultar o Tutor.");
@@ -3598,17 +3760,18 @@
                 list.forEach(item => {
                     const div = document.createElement('div');
                     div.className = "knowledge-card";
-                    div.style = "background:rgba(255,255,255,0.05); padding:15px; border-radius:12px; border:1px solid rgba(255,255,255,0.1); margin-bottom:10px; display:flex; justify-content:space-between; align-items:center; transition:0.3s;";
+                    div.style = "background:rgba(255,255,255,0.05); padding:15px; border-radius:12px; border:1px solid rgba(255, 255, 255, 0.1); margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center; transition: 0.3s; ";
                     div.innerHTML = `
-                        <div style="font-size:0.8rem; color:white;">
-                            <strong style="display:block; color:var(--gold);">${item.titulo}</strong>
-                            <p style="display:none;" class="knowledge-content">${item.conteudo}</p>
-                            <span style="font-size:0.65rem; color:#94a3b8;">${new Date(item.data).toLocaleDateString()}</span>
-                        </div>
-                        <button onclick="apagarConhecimento(${item.id})" style="background:rgba(239, 68, 68, 0.1); border:none; color:#ef4444; width:30px; height:30px; border-radius:50%; cursor:pointer; display:flex; align-items:center; justify-content:center;">
-                            <i class="fa-solid fa-trash-can"></i>
-                        </button>
-                    `;
+                <div style="font-size:0.8rem; color:white;">
+                    <strong style="display:block; color:var(--gold);">${item.titulo}</strong>
+                    <p style="display:none;" class="knowledge-content">${item.conteudo}</p>
+                    <span style="font-size:0.65rem; color:#94a3b8;">${new Date(item.data).toLocaleDateString()}</span>
+                </div>
+                    <button onclick="apagarConhecimento(${item.id})"
+                        style="background:rgba(239, 68, 68, 0.1); border:none; color:#ef4444; width:30px; height:30px; border-radius:50%; cursor:pointer; display:flex; align-items:center; justify-content:center;">
+                        <i class="fa-solid fa-trash-can"></i>
+                    </button>
+                `;
                     container.appendChild(div);
                 });
             } catch (e) {
@@ -3619,7 +3782,7 @@
         async function apagarConhecimento(id) {
             if (confirm("Deseja apagar esta sabedoria?")) {
                 try {
-                    await fetch(`/api/conhecimento/apagar/${id}`, { method: 'DELETE' });
+                    await fetch(`/ api / conhecimento / apagar / ${id}`, { method: 'DELETE' });
                     showToast("🗑️ Conhecimento apagado.");
                     listarConhecimento();
                 } catch (e) {
@@ -3634,7 +3797,8 @@
             const term = document.getElementById('terminal-output');
             const firstLine = term.querySelector('div:first-child');
             if (firstLine) {
-                firstLine.innerHTML = `<span style="color:#4ade80;">root@carpintaria:~$</span> IA Online - Agente: ${agenteNome}`;
+                firstLine.innerHTML = `< span style = "color:#4ade80;" > root@carpintaria: ~$</span > IA Online - Agente:
+                    ${agenteNome}`;
             }
         });
     </script>

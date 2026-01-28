@@ -23,7 +23,10 @@ except ImportError:
 
 
 # --- CONFIGURAÇÕES ---
-DB_PATH = "carpintaria.db"
+if os.environ.get("VERCEL"):
+    DB_PATH = "/tmp/carpintaria.db"
+else:
+    DB_PATH = "carpintaria.db"
 OLLAMA_URL = "http://localhost:11434"
 
 def init_db():

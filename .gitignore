@@ -25,6 +25,6 @@ _archive/
 documentos_consultoria/
 data/
 .streamlit/
-static/assets/images/LOGO-*.png
-static/assets/images/*.png
-static/images/*.png
+# static/assets/images/LOGO-*.png
+# static/assets/images/*.png
+# static/images/*.png

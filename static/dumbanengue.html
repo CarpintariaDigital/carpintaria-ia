@@ -14,7 +14,7 @@
     <link rel="stylesheet" href="../assets/css/mobile.css">
     <link rel="manifest" href="/static/manifest.json">
     <meta name="theme-color" content="#d4af37">
-    <link rel="stylesheet" href="../assets/css/chatbot.css">
+    <link rel="stylesheet" href="/assets/css/chatbot.css">
 
     <style>
         /* --- ESTILO BASE --- */
@@ -408,73 +408,27 @@
         }
     </script>
 
-    <div id="chat-widget" style="position: fixed; bottom: 20px; right: 20px; z-index: 9999;">
-        <div onclick="toggleChat()"
-            style="width: 50px; height: 50px; background: #0f172a; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: #D4A373; cursor: pointer; box-shadow: 0 4px 10px rgba(0,0,0,0.2);">
-            <i class="fa-solid fa-comments" style="font-size: 1.2rem;"></i>
+    <!-- Chatbot Soberano Structure -->
+    <div id="chatWindow" class="chat-window">
+        <div class="chat-header">
+            <div class="bot-avatar"><i class="fa-solid fa-robot"></i></div>
+            <span>Assistente CD</span>
+            <i class="fa-solid fa-times" style="margin-left: auto; cursor: pointer;" onclick="toggleChat()"></i>
         </div>
-
-        <div id="chat-window"
-            style="display: none; position: absolute; bottom: 70px; right: 0; width: 300px; height: 400px; background: white; border-radius: 12px; box-shadow: 0 10px 30px rgba(0,0,0,0.2); border: 1px solid #e2e8f0; flex-direction: column; overflow: hidden;">
-            <div
-                style="background: #0f172a; padding: 15px; color: white; display: flex; justify-content: space-between; align-items: center;">
-                <span style="font-weight: 600;">Assistente CD</span>
-                <i class="fa-solid fa-times" style="cursor: pointer;" onclick="toggleChat()"></i>
-            </div>
-            <div id="chat-msgs"
-                style="flex: 1; padding: 15px; overflow-y: auto; background: #f8fafc; font-size: 0.9rem;">
-                <div
-                    style="background: #e2e8f0; padding: 8px 12px; border-radius: 8px; display: inline-block; margin-bottom: 10px; color: #334155;">
-                    Olá! Em que posso ajudar?</div>
-            </div>
-            <div style="padding: 10px; border-top: 1px solid #eee; display: flex;">
-                <input type="text" id="chat-input" placeholder="Mensagem..."
-                    style="flex: 1; border: none; outline: none; font-size: 0.9rem;"
-                    onkeypress="if(event.key==='Enter') sendChat()">
-                <button onclick="sendChat()" style="background: none; border: none; color: #D4A373; cursor: pointer;"><i
-                        class="fa-solid fa-paper-plane"></i></button>
-            </div>
+        <div id="chatMessages" class="chat-messages">
+            <!-- Messages injected by JS -->
+        </div>
+        <div class="chat-input-area">
+            <input type="text" id="user-input" class="chat-input" placeholder="Digite sua mensagem..."
+                onkeypress="handleInput(event)">
         </div>
     </div>
 
-    <script>
-        function toggleChat() {
-            const win = document.getElementById('chat-window');
-            win.style.display = (win.style.display === 'none') ? 'flex' : 'none';
-        }
+    <div class="chat-widget-btn" onclick="toggleChat()">
+        <i class="fa-solid fa-comments"></i>
+    </div>
 
-        async function sendChat() {
-            const input = document.getElementById('chat-input');
-            const msgs = document.getElementById('chat-msgs');
-            const txt = input.value.trim();
-            if (!txt) return;
-
-            // User Message
-            msgs.innerHTML += `<div style="text-align: right; margin-bottom: 10px;"><span style="background: #D4A373; color: white; padding: 8px 12px; border-radius: 8px; display: inline-block;">${txt}</span></div>`;
-            input.value = '';
-            msgs.scrollTop = msgs.scrollHeight;
-
-            try {
-                // API Call (IA)
-                const req = await fetch('/api/chat', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        mensagem: txt,
-                        agente: 'sac',
-                        provider: 'auto'
-                    })
-                });
-                const res = await req.json();
-
-                // AI Response
-                msgs.innerHTML += `<div style="text-align: left; margin-bottom: 10px;"><span style="background: #e2e8f0; color: #334155; padding: 8px 12px; border-radius: 8px; display: inline-block;">${res.resposta}</span></div>`;
-                msgs.scrollTop = msgs.scrollHeight;
-            } catch (e) {
-                msgs.innerHTML += `<div style="color: red; font-size: 0.8rem;">Erro de conexão.</div>`;
-            }
-        }
-    </script>
+    <script src="/js/chatbot.js"></script>
     <script>
         // PWA Service Worker Registration
         if ('serviceWorker' in navigator) {

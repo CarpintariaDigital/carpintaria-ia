@@ -413,6 +413,59 @@
                 flex-direction: column;
                 gap: 0.5rem;
                 align-items: center;
+
+            }
+
+            .hero-slogan {
+                margin-top: 2rem !important;
+            }
+
+            .slogan-title {
+                font-size: 2rem !important;
+            }
+        }
+
+        /* SLOGAN STYLES */
+        .hero-slogan {
+            text-align: center;
+            margin-top: 2.5rem;
+            position: relative;
+            z-index: 10;
+            padding: 0 1rem;
+            animation: fadeIn 1s ease-out;
+        }
+
+        .slogan-title {
+            font-family: 'Playfair Display', serif;
+            font-size: 2.8rem;
+            color: var(--navy-brand);
+            margin-bottom: 0.8rem;
+            letter-spacing: -1px;
+        }
+
+        .slogan-text {
+            font-family: 'Inter', sans-serif;
+            color: var(--text-muted);
+            font-size: 1.1rem;
+            line-height: 1.6;
+        }
+
+        .slogan-sub {
+            color: var(--gold);
+            font-weight: 600;
+            display: block;
+            margin-top: 4px;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
             }
         }
     </style>
@@ -455,7 +508,7 @@
         </a>
 
         <div class="logo-center">
-            <img src="assets/images/Logo-carpintaria.svg" alt="CD" class="logo-img"
+            <img src="/images/Logo-carpintaria.svg" alt="CD" class="logo-img"
                 onerror="this.style.display='none'; this.parentElement.innerHTML='<span style=\'color:white; font-size:3rem; font-family:Playfair Display\'>CD</span>'">
             <div
                 style="position:absolute; bottom:-15px; background:var(--gold); color:var(--navy-brand); font-size:0.6rem; font-weight:900; padding:2px 8px; border-radius:10px; text-transform:uppercase; letter-spacing:1px; box-shadow:0 5px 15px rgba(212, 163, 115, 0.4);">
@@ -464,19 +517,28 @@
 
         <div class="portal-gate gate-right" onclick="abrirLogin(); return false;"
             style="border: 2px solid var(--gold); background: linear-gradient(145deg, #ffffff, #fffdfa);">
-            <span class="tag tag-private" style="background:var(--gold); color:white;">Master Key</span>
+            <span class="tag tag-private" style="background:var(--gold); color:white;">Acesso Restrito</span>
             <div
                 style="background:var(--gold); width:60px; height:60px; border-radius:50%; display:flex; align-items:center; justify-content:center; margin-bottom:1rem; box-shadow:0 10px 20px rgba(212, 163, 115, 0.3);">
-                <i class="fa-solid fa-key" style="color:white; font-size:1.8rem;"></i>
+                <i class="fa-solid fa-lock" style="color:white; font-size:1.8rem;"></i>
             </div>
             <div>
                 <h2 class="gate-title">Escritório</h2>
                 <p class="gate-desc">
-                    Acesso ao Ateliê.<br>Ativar Chave do Mestre.
+                    Área exclusiva para colaboradores.<br>Entrada permitida apenas a funcionários.
                 </p>
             </div>
         </div>
 
+    </div>
+
+    <!-- HERO SLOGAN -->
+    <div class="hero-slogan">
+        <h1 class="slogan-title">Carpintaria Digital</h1>
+        <p class="slogan-text">
+            Ideias transformadas em soluções reais de negócios, serviços e produtos.<br>
+            <span class="slogan-sub">Tecnologia, estratégia e humanidade no centro.</span>
+        </p>
     </div>
 
     <div class="footer-tag">
